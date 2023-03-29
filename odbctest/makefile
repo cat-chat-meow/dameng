@@ -1,9 +1,9 @@
 CC=gcc
 
-includepath=/usr/include
-binpath=/usr/bin
-libpath=/usr/lib/x86_64-linux-gnu/libodbc.so
-#libpath=/usr/bin/
+includepath=$(DM_HOME)/include
+binpath=$(DM_HOME)/bin
+libpath=$(DM_HOME)/bin/libdodbc.so
+#libpath=$(DM_HOME)/bin/
 vpath=./
 
 CFLAGS=-I$(includepath) -DDM64 -Wall

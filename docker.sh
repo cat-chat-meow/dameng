@@ -101,6 +101,8 @@ docker_run() {
     demo1)
         docker run -it \
             --name ${run_name} \
+            -e LD_LIBRARY_PATH=/opt/dmdbms/bin \
+            -e DM_HOME=/opt/dmdbms \
             ${docker_name}:latest
         ;;
     *)
