@@ -1,5 +1,12 @@
 # 达梦数据库实践
 
+## 傻瓜教程
+
+```bash
+./docker.sh -b demo1
+./docker.sh -r demo1 -name demo_cpp
+```
+
 ## docker
 
 [官方docker下载](https://eco.dameng.com/download/)
@@ -27,5 +34,6 @@ docker restart dm8_01
 cd /opt/dmdbms/bin
 ./disql SYSDBA/SYSDBA001@127.0.0.1:5236
 ./disql test111/'"123456@@@"'@127.0.0.1:5236
-
+# or
+isql -v DM
 ```
