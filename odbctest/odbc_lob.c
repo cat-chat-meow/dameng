@@ -12,11 +12,11 @@
 
 #define IN_FILE "/data/c_test_code/DM8_SQL.pdf"
 #define OUT_FILE "/data/c_test_code/DM8_SQL2.pdf"
-#define CHARS 80*1024 //一次读取和写入的字节数 80 KB
+#define CHARS 80 * 1024 // 一次读取和写入的字节数 80 KB
 
-HENV henv;/* 环境句柄 */
-HDBC hdbc;/* 连接句柄 */
-HSTMT hstmt;/* 语句句柄 */
+HENV henv;      /* 环境句柄 */
+HDBC hdbc;      /* 连接句柄 */
+HSTMT hstmt;    /* 语句句柄 */
 SQLRETURN sret; /* 返回代码 */
 
 SQLSMALLINT errmsglen;
@@ -26,16 +26,16 @@ UCHAR errstate[5];
 
 int main(void)
 {
-    FILE*   pfile = NULL;
+    FILE *pfile = NULL;
     SQLCHAR tmpbuf[CHARS];
-    SQLLEN  len = 0;
-    SQLLEN  val_len = 0;
+    SQLLEN len = 0;
+    SQLLEN val_len = 0;
 
-    SQLLEN      c1 =1; 
-    SQLLEN      c2 = SQL_DATA_AT_EXEC;
-    SQLLEN      c1_ind_ptr = 0;
-    SQLLEN      c2_ind_ptr = SQL_DATA_AT_EXEC;
-    PTR         c2_val_ptr;
+    SQLLEN c1 = 1;
+    SQLLEN c2 = SQL_DATA_AT_EXEC;
+    SQLLEN c1_ind_ptr = 0;
+    SQLLEN c2_ind_ptr = SQL_DATA_AT_EXEC;
+    PTR c2_val_ptr;
 
     /* 申请句柄 */
     SQLAllocHandle(SQL_HANDLE_ENV, NULL, &henv);
@@ -43,7 +43,8 @@ int main(void)
     SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
 
     sret = SQLConnect(hdbc, (SQLCHAR *)"dm8", SQL_NTS, (SQLCHAR *)"SYSDBA", SQL_NTS, (SQLCHAR *)"SYSDBA", SQL_NTS);
-    if (RC_NOTSUCCESSFUL(sret)) {
+    if (RC_NOTSUCCESSFUL(sret))
+    {
         printf("odbc: fail to connect to server!\n");
         SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
         SQLFreeHandle(SQL_HANDLE_ENV, henv);
@@ -54,11 +55,11 @@ int main(void)
     /* 申请一个语句句柄 */
     SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
 
-    //清空表，初始化测试环境
+    // 清空表，初始化测试环境
     sret = SQLExecDirect(hstmt, (SQLCHAR *)"drop table PRODUCTION.BIG_DATA", SQL_NTS);
     sret = SQLExecDirect(hstmt, (SQLCHAR *)"create table PRODUCTION.BIG_DATA(c1 int, c2 blob)", SQL_NTS);
 
-    //读取文件，插入到 LOB 列
+    // 读取文件，插入到 LOB 列
     pfile = fopen(IN_FILE, "rb");
     if (pfile == NULL)
     {
@@ -67,8 +68,8 @@ int main(void)
     }
 
     sret = SQLPrepare(hstmt, (SQLCHAR *)"insert into PRODUCTION.BIG_DATA(c1,c2) values(?,?)", SQL_NTS);
-    sret = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_SLONG,  SQL_INTEGER, sizeof(c1), 0, &c1, sizeof(c1), NULL);
-    sret = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_BINARY,  SQL_VARBINARY, sizeof(c2), 0, (void *)1, sizeof(c2), &c2_ind_ptr);
+    sret = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_SLONG, SQL_INTEGER, sizeof(c1), 0, &c1, sizeof(c1), NULL);
+    sret = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_VARBINARY, sizeof(c2), 0, (void *)1, sizeof(c2), &c2_ind_ptr);
     sret = SQLExecute(hstmt);
     if (sret == SQL_NEED_DATA)
     {
@@ -85,16 +86,17 @@ int main(void)
             }
         }
         SQLParamData(hstmt, &c2_val_ptr); /* 绑定数据 */
-    }else if( sret == SQL_ERROR ) 
+    }
+    else if (sret == SQL_ERROR)
     {
         SQLGetDiagRec(SQL_HANDLE_STMT, hstmt, 1, errstate, &errnative, errmsg, sizeof(errmsg), &errmsglen);
-        printf( "error:%s\n", errmsg );
+        printf("error:%s\n", errmsg);
     }
 
     printf("odbc: insesret data into col of lob success\n");
     fclose(pfile);
 
-    //读取 LOB 列数据，写入文件
+    // 读取 LOB 列数据，写入文件
     pfile = fopen((const char *)OUT_FILE, "wb");
     if (pfile == NULL)
     {
@@ -103,10 +105,10 @@ int main(void)
     }
 
     sret = SQLExecDirect(hstmt, (SQLCHAR *)"select c1, c2 from PRODUCTION.BIG_DATA", SQL_NTS);
-    sret = SQLBindCol(hstmt, 1, SQL_C_SLONG, &c1, sizeof(c1), &c1_ind_ptr); 
-    while(SQLFetch(hstmt) != SQL_NO_DATA)
+    sret = SQLBindCol(hstmt, 1, SQL_C_SLONG, &c1, sizeof(c1), &c1_ind_ptr);
+    while (SQLFetch(hstmt) != SQL_NO_DATA)
     {
-        while(1)
+        while (1)
         {
             sret = SQLGetData(hstmt, 2, SQL_C_BINARY, tmpbuf, CHARS, &val_len);
             if ((sret) == SQL_SUCCESS || (sret) == SQL_SUCCESS_WITH_INFO)
@@ -129,4 +131,3 @@ int main(void)
     SQLFreeHandle(SQL_HANDLE_ENV, henv);
     return 0;
 }
-
