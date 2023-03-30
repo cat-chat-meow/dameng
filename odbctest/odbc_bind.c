@@ -5,6 +5,8 @@
 #include <sqltypes.h>
 #include <sqlext.h>
 
+#include <config_parser.h>
+
 /* 检测返回代码是否为成功标志，当为成功标志返回 TRUE，否则返回 FALSE */
 #define RC_SUCCESSFUL(rc) ((rc) == SQL_SUCCESS || (rc) == SQL_SUCCESS_WITH_INFO)
 /* 检测返回代码是否为失败标志，当为失败标志返回 TRUE，否则返回 FALSE */
@@ -17,6 +19,8 @@ SQLRETURN sret; /* 返回代码 */
 
 int main(void)
 {
+    db_config config = read_config("config.ini");
+
     SQLCHAR sql[] = "insert into PRODUCTION.PRODUCT_CATEGORY(NAME) values(?)";
     SQLCHAR in_c1[20] = {0};
     SQLLEN in_c1_ind_ptr;
@@ -34,7 +38,10 @@ int main(void)
     SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, SQL_IS_INTEGER);
     SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
 
-    sret = SQLConnect(hdbc, (SQLCHAR *)"dm8", SQL_NTS, (SQLCHAR *)"SYSDBA", SQL_NTS, (SQLCHAR *)"SYSDBA", SQL_NTS);
+    sret = SQLConnect(hdbc,
+                      (SQLCHAR *)config.db_name, SQL_NTS,
+                      (SQLCHAR *)config.db_user, SQL_NTS,
+                      (SQLCHAR *)config.db_pwd, SQL_NTS);
     if (RC_NOTSUCCESSFUL(sret))
     {
         printf("odbc: fail to connect to server!\n");

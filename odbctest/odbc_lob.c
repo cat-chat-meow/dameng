@@ -26,6 +26,8 @@ UCHAR errstate[5];
 
 int main(void)
 {
+    db_config config = read_config("config.ini");
+
     FILE *pfile = NULL;
     SQLCHAR tmpbuf[CHARS];
     SQLLEN len = 0;
@@ -42,7 +44,10 @@ int main(void)
     SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, SQL_IS_INTEGER);
     SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
 
-    sret = SQLConnect(hdbc, (SQLCHAR *)"dm8", SQL_NTS, (SQLCHAR *)"SYSDBA", SQL_NTS, (SQLCHAR *)"SYSDBA", SQL_NTS);
+    sret = SQLConnect(hdbc,
+                      (SQLCHAR *)config.db_name, SQL_NTS,
+                      (SQLCHAR *)config.db_user, SQL_NTS,
+                      (SQLCHAR *)config.db_pwd, SQL_NTS);
     if (RC_NOTSUCCESSFUL(sret))
     {
         printf("odbc: fail to connect to server!\n");

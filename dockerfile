@@ -1,7 +1,6 @@
 FROM debian:bullseye AS dameng_cpp_demo_basin
 
 COPY sources.list /etc/apt/
-COPY vimrc /root/.vimrc
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -15,6 +14,8 @@ RUN apt-get update && apt-get install -y \
 
 RUN apt-get install -y \
     unixodbc unixodbc-dev
+
+COPY vimrc /root/.vimrc
 
 FROM dameng_cpp_demo_basin AS dameng_cpp_demo_runtime
 

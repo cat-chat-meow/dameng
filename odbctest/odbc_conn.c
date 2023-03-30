@@ -19,8 +19,6 @@ SQLRETURN sret; /* 返回代码 */
 int main(void)
 {
     db_config config = read_config("config.ini");
-    printf("parser config, db_user %s db_pwd %s",
-           config.db_user, config.db_pwd);
 
     /* 申请一个环境句柄 */
     SQLAllocHandle(SQL_HANDLE_ENV, NULL, &henv);
@@ -31,7 +29,7 @@ int main(void)
     SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
 
     sret = SQLConnect(hdbc,
-                      (SQLCHAR *)"DM", SQL_NTS,
+                      (SQLCHAR *)config.db_name, SQL_NTS,
                       (SQLCHAR *)config.db_user, SQL_NTS,
                       (SQLCHAR *)config.db_pwd, SQL_NTS);
     if (RC_NOTSUCCESSFUL(sret))

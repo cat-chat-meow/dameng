@@ -33,6 +33,15 @@ int read_config_(void)
     return 0;
 }
 
+void trim_newline(char *str)
+{
+    int len = strlen(str);
+    if (len > 0 && str[len - 1] == '\n')
+    {
+        str[len - 1] = '\0'; // 替换\n为字符串结束符\0
+    }
+}
+
 typedef struct
 {
     char db_name[100];
@@ -52,17 +61,27 @@ db_config read_config(const char *filename)
     while (fgets(buf, sizeof(buf), fp) != NULL)
     {
         char *token = strtok(buf, "=");
+        if (strcmp(token, "DB_NAME") == 0)
+        {
+            token = strtok(NULL, "=");
+            trim_newline(token);
+            strcpy(config.db_name, token);
+        }
         if (strcmp(token, "UID") == 0)
         {
             token = strtok(NULL, "=");
+            trim_newline(token);
             strcpy(config.db_user, token);
         }
         if (strcmp(token, "PWD") == 0)
         {
             token = strtok(NULL, "=");
+            trim_newline(token);
             strcpy(config.db_pwd, token);
         }
     }
     fclose(fp);
+    printf("parser config, db_name %s db_user %s db_pwd %s \n",
+           config.db_name, config.db_user, config.db_pwd);
     return config;
 }
