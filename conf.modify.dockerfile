@@ -4,6 +4,7 @@ FROM dm8_single:v8.1.2.128_ent_x86_64_ctm_pack4 AS modfiy_dm8
 # Ubuntu 16.04.4 LTS \n \l
 
 COPY sources.list.ubuntu /etc/apt/sources.list
+COPY vimrc /root/.vimrc
 
 RUN apt-get update && apt-get install -y \
     build-essential \
