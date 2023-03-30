@@ -5,6 +5,8 @@
 #include <sqltypes.h>
 #include <sqlext.h>
 
+#include <config_parser.h>
+
 /* 检测返回代码是否为成功标志，当为成功标志返回 TRUE，否则返回 FALSE */
 #define RC_SUCCESSFUL(rc) ((rc) == SQL_SUCCESS || (rc) == SQL_SUCCESS_WITH_INFO)
 /* 检测返回代码是否为失败标志，当为失败标志返回 TRUE，否则返回 FALSE */

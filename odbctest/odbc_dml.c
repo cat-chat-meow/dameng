@@ -5,6 +5,8 @@
 #include <sqltypes.h>
 #include <sqlext.h>
 
+#include <config_parser.h>
+
 /* 检测返回代码是否为成功标志，当为成功标志返回 TRUE，否则返回 FALSE */
 #define RC_SUCCESSFUL(rc) ((rc) == SQL_SUCCESS || (rc) == SQL_SUCCESS_WITH_INFO)
 /* 检测返回代码是否为失败标志，当为失败标志返回 TRUE，否则返回 FALSE */
@@ -53,6 +55,7 @@ int main(void)
     if (RC_NOTSUCCESSFUL(sret))
     {
         printf("odbc: insert fail\n");
+        exit(0);
     }
     printf("odbc: insert success\n");
 
@@ -61,6 +64,7 @@ int main(void)
     if (RC_NOTSUCCESSFUL(sret))
     {
         printf("odbc: delete fail\n");
+        exit(0);
     }
     printf("odbc: delete success\n");
 
@@ -69,6 +73,7 @@ int main(void)
     if (RC_NOTSUCCESSFUL(sret))
     {
         printf("odbc: update fail\n");
+        exit(0);
     }
     printf("odbc: update success\n");
 
