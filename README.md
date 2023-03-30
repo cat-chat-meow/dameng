@@ -21,3 +21,11 @@ docker restart dm8_01
 
 > 1. 如果使用 docker 容器里面的 disql，进入容器后，先执行 source /etc/profile 防止中文乱码。
 > 2. 新版本 Docker 镜像中数据库默认用户名/密码为 SYSDBA/SYSDBA001。
+
+```bash
+# login
+cd /opt/dmdbms/bin
+./disql SYSDBA/SYSDBA001@127.0.0.1:5236
+./disql test111/'"123456@@@"'@127.0.0.1:5236
+
+```

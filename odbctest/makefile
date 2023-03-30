@@ -6,7 +6,7 @@ libpath=$(DM_HOME)/bin/libdodbc.so
 #libpath=$(DM_HOME)/bin/
 vpath=./
 
-CFLAGS=-I$(includepath) -DDM64 -Wall
+CFLAGS=-I$(includepath) -I/usr/include -DDM64 -Wall
 LINKFLAGS=-L$(binpath) -lodbc -Wall -Wl,-rpath $(libpath)
 
 %.o:%.c
