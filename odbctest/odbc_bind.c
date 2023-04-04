@@ -61,7 +61,7 @@ int main(void)
     // 创建表
     strcpy(sql, (SQLCHAR *)"CREATE TABLE TEST001(ID INT, NAME VARCHAR(20))");
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
-    printf("odbc: handle sql %s \n sret %d \n", sql, sret);
+    printf("odbc: handle sql %s \n sret %d \n", (char *)sql, sret);
     if (RC_NOTSUCCESSFUL(sret))
     {
         FREE_HANDLE("odbc: create table fail!\n", sret, henv, hdbc, 0);
@@ -72,13 +72,14 @@ int main(void)
     // 清空表，初始化测试环境
     strcpy(sql, (SQLCHAR *)"delete from TEST001");
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
-    printf("odbc: handle sql %s \n sret %d \n", sql, sret);
+    printf("odbc: handle sql %s \n sret %d \n", (char *)sql, sret);
 
     // 绑定参数方式插入数据
     strcpy(sql, (SQLCHAR *)"insert into TEST001(NAME) values(?)");
-    printf("insert with bind..\nsql: %s\npara: %s\n", (char *)sql, (char *)in_c1);
+    printf("insert with bind..\n sql: %s\n para: %s\n", (char *)sql, (char *)in_c1);
     sret = SQLPrepare(hstmt, sql, SQL_NTS);
-    sret = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, sizeof(in_c1), 0, in_c1, 0, &in_c1_ind_ptr);
+    sret = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR,
+                            sizeof(in_c1) / sizeof(SQLLEN), 0, in_c1, 0, &in_c1_ind_ptr);
     sret = SQLExecute(hstmt);
     if (RC_NOTSUCCESSFUL(sret))
     {
@@ -89,8 +90,8 @@ int main(void)
 
     // 查询数据
     SQLExecDirect(hstmt, (SQLCHAR *)"select * from TEST001", SQL_NTS);
-    SQLBindCol(hstmt, 1, SQL_C_SLONG, &out_c1, sizeof(out_c1), &out_c1_ind);
-    SQLBindCol(hstmt, 2, SQL_C_CHAR, &out_c2, sizeof(out_c2), &out_c2_ind);
+    SQLBindCol(hstmt, 1, SQL_C_SLONG, &out_c1, sizeof(out_c1) / sizeof(SQLLEN), &out_c1_ind);
+    SQLBindCol(hstmt, 2, SQL_C_CHAR, &out_c2, sizeof(out_c2) / sizeof(SQLLEN), &out_c2_ind);
 
     printf("odbc: select from table...\n");
     while (SQLFetch(hstmt) != SQL_NO_DATA)

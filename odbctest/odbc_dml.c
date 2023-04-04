@@ -56,10 +56,17 @@ int main(void)
     // 查询
     SQLCHAR sql[] = "SELECT * FROM DBA_OBJECTS WHERE OBJECT_TYPE='SCH' AND OBJECT_NAME ='EXAMPLE_SCHEMA' AND STATUS='VALID'";
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
-    // row count 不能用于 select 查询？
-    SQLRowCount(hstmt, &row_count);
+    // row count 不能用于 select 查询，仅适用于 delete update insert 这种更新行
+    // SQLRowCount(hstmt, &row_count);
+
+    // select use SQLFetch
+    // Fetch result set rows
+    while (SQLFetch(hstmt) == SQL_SUCCESS)
+    {
+        row_count++;
+    }
     printf("odbc: handle sql %s \n sret{%d} row{%d}\n", (char *)sql, sret, row_count);
-    // if (!row_count || RC_NOTSUCCESSFUL(sret))
+    if (!row_count || RC_NOTSUCCESSFUL(sret))
     {
 
         FREE_HANDLE("odbc: select fail!\n", sret, henv, hdbc, 0);

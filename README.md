@@ -7,6 +7,16 @@
 ./docker.sh -r demo1 -name demo_cpp
 ```
 
+## QA
+
+调试通过的示例
+
+- [odbc_conn](./odbctest/odbc_conn.c)
+- [odbc_dml](./odbctest/odbc_dml.c)
+
+[odbc_bind](./odbctest/odbc_bind.c) 目前会存在内存偏移，暂时搁置，bind 方法是可以使用的  
+[odbc_lob](./odbctest/odbc_lob.c) 未调试
+
 ## docker
 
 [官方docker下载](https://eco.dameng.com/download/)
@@ -39,7 +49,10 @@ isql -v DM
 ```
 
 ```bash
-./docker -b demo1
+./docker.sh -b demo1
 # run
 ./docker.sh -r demo1 -name demo_cpp
+
+# combine
+./docker.sh -b demo1 && ./docker.sh -r demo1 -name demo_cpp
 ```
