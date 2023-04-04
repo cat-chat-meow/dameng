@@ -13,8 +13,8 @@
 
 - [odbc_conn](./odbctest/odbc_conn.c)
 - [odbc_dml](./odbctest/odbc_dml.c)
+- [odbc_bind](./odbctest/odbc_bind.c) 之前存在内存偏移，是因为类型不匹配导致 已修复
 
-[odbc_bind](./odbctest/odbc_bind.c) 目前会存在内存偏移，暂时搁置，bind 方法是可以使用的  
 [odbc_lob](./odbctest/odbc_lob.c) 未调试
 
 ## docker

@@ -31,7 +31,7 @@ int main(void)
 {
     db_config config = read_config("config.ini");
 
-    SQLCHAR sql[] = "";
+    SQLCHAR sql[] = "insert into TEST001(NAME) values(?)";
     SQLCHAR in_c1[20] = {0};
     SQLLEN in_c1_ind_ptr;
 
@@ -59,9 +59,7 @@ int main(void)
     SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
 
     // 创建表
-    strcpy(sql, (SQLCHAR *)"CREATE TABLE TEST001(ID INT, NAME VARCHAR(20))");
-    sret = SQLExecDirect(hstmt, sql, SQL_NTS);
-    printf("odbc: handle sql %s \n sret %d \n", (char *)sql, sret);
+    sret = SQLExecDirect(hstmt, (SQLCHAR *)"CREATE TABLE TEST001(ID INT, NAME VARCHAR(20))", SQL_NTS);
     if (RC_NOTSUCCESSFUL(sret))
     {
         FREE_HANDLE("odbc: create table fail!\n", sret, henv, hdbc, 0);
@@ -70,12 +68,9 @@ int main(void)
     printf("odbc: create table success!\n");
 
     // 清空表，初始化测试环境
-    strcpy(sql, (SQLCHAR *)"delete from TEST001");
-    sret = SQLExecDirect(hstmt, sql, SQL_NTS);
-    printf("odbc: handle sql %s \n sret %d \n", (char *)sql, sret);
+    sret = SQLExecDirect(hstmt, (SQLCHAR *)"delete from TEST001", SQL_NTS);
 
     // 绑定参数方式插入数据
-    strcpy(sql, (SQLCHAR *)"insert into TEST001(NAME) values(?)");
     printf("insert with bind..\n sql: %s\n para: %s\n", (char *)sql, (char *)in_c1);
     sret = SQLPrepare(hstmt, sql, SQL_NTS);
     sret = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR,
