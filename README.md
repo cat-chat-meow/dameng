@@ -37,3 +37,9 @@ cd /opt/dmdbms/bin
 # or
 isql -v DM
 ```
+
+```bash
+./docker -b demo1
+# run
+./docker.sh -r demo1 -name demo_cpp
+```

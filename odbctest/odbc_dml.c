@@ -12,6 +12,16 @@
 /* 检测返回代码是否为失败标志，当为失败标志返回 TRUE，否则返回 FALSE */
 #define RC_NOTSUCCESSFUL(rc) (!(RC_SUCCESSFUL(rc)))
 
+#define FREE_HANDLE(str, rc, henv, hdbc, is_exit) \
+    if (RC_NOTSUCCESSFUL(rc))                     \
+    {                                             \
+        printf(str);                              \
+        SQLFreeHandle(SQL_HANDLE_DBC, hdbc);      \
+        SQLFreeHandle(SQL_HANDLE_ENV, henv);      \
+        if (is_exit)                              \
+            exit(0);                              \
+    }
+
 HENV henv;        /* 环境句柄 */
 HDBC hdbc;        /* 连接句柄 */
 HSTMT hstmt;      /* 语句句柄 */
@@ -36,46 +46,57 @@ int main(void)
                       (SQLCHAR *)config.db_name, SQL_NTS,
                       (SQLCHAR *)config.db_user, SQL_NTS,
                       (SQLCHAR *)config.db_pwd, SQL_NTS);
-    if (RC_NOTSUCCESSFUL(sret))
-    {
-        printf("odbc: fail to connect to server!\n");
-        SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
-        SQLFreeHandle(SQL_HANDLE_ENV, henv);
-        exit(0);
-    }
+    FREE_HANDLE("odbc: fail to connect to server!\n", sret, henv, hdbc, 1);
     printf("odbc: connect to server success!\n");
 
     /* 申请一个语句句柄 */
     SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
 
+    // 如果 sql 执行失败必须释放 重新申请 不然下面的全部都会失败
     // 查询
-    SQLCHAR sql[] = "select * from dba_objects where object_type='SCH' and OBJECT_NAME ='EXAMPLE_SCHEMA' and STATUS='VALID'";
+    SQLCHAR sql[] = "SELECT * FROM DBA_OBJECTS WHERE OBJECT_TYPE='SCH' AND OBJECT_NAME ='EXAMPLE_SCHEMA' AND STATUS='VALID'";
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
+    // row count 不能用于 select 查询？
     SQLRowCount(hstmt, &row_count);
-    if (!row_count)
+    printf("odbc: handle sql %s \n sret{%d} row{%d}\n", sql, sret, row_count);
+    // if (!row_count || RC_NOTSUCCESSFUL(sret))
     {
+
+        FREE_HANDLE("odbc: select fail!\n", sret, henv, hdbc, 0);
+        SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
+
         printf("odbc: no EXAMPLE_SCHEMA then create\n");
-        strcpy(sql, (SQLCHAR *)"create schema example_schema");
+        strcpy(sql, (SQLCHAR *)"CREATE SCHEMA EXAMPLE_SCHEMA");
         sret = SQLExecDirect(hstmt, sql, SQL_NTS);
+        printf("odbc: handle sql %s \n sret %d \n", sql, sret);
         // SQLRowCount returns -1 成功也是 -1 ？？？
-        (sret) == SQL_NULL_DATA ? printf("odbc: create schema suc\n") : printf("odbc: create schema fail\n");
-        strcpy(sql, (SQLCHAR *)"create table example_schema.example_table(name varchar)");
+        if (RC_NOTSUCCESSFUL(sret))
+        {
+            FREE_HANDLE("odbc: create schema fail!\n", sret, henv, hdbc, 0);
+            SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
+        }
+        strcpy(sql, (SQLCHAR *)"CREATE TABLE TEST(ID INT NOT NULL, NAME VARCHAR(20))");
         sret = SQLExecDirect(hstmt, sql, SQL_NTS);
-        (sret) == SQL_NULL_DATA ? printf("odbc: create table suc\n") : printf("odbc: create table fail\n");
+        printf("odbc: handle sql %s \n sret %d \n", sql, sret);
+        if (RC_NOTSUCCESSFUL(sret))
+        {
+            FREE_HANDLE("odbc: create table fail!\n", sret, henv, hdbc, 0);
+            SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
+        }
     }
 
+    // SELECT TABLEDEF('SYSDBA','TEST');
     // 插入数据
-    strcpy(sql, (SQLCHAR *)"insert into example_schema.example_table(name) values('chinese'), ('math'), ('english'), ('gym') ");
+    strcpy(sql, (SQLCHAR *)"INSERT INTO TEST(ID, NAME) VALUES('1', 'CHINESE'), ('2', 'MATH'), ('3', 'ENGLISH'), ('4', 'GYM')");
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
     if (RC_NOTSUCCESSFUL(sret))
     {
-        printf("odbc: insert fail\n");
-        exit(0);
+        FREE_HANDLE("odbc: insert fail!\n", sret, henv, hdbc, 1);
     }
     printf("odbc: insert success\n");
 
     // 删除数据
-    strcpy(sql, (SQLCHAR *)"delete from example_schema.example_table where name='math' ");
+    strcpy(sql, (SQLCHAR *)"DELETE FROM TEST WHERE NAME='MATH' ");
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
     if (RC_NOTSUCCESSFUL(sret))
     {
@@ -85,7 +106,7 @@ int main(void)
     printf("odbc: delete success\n");
 
     // 更新数据
-    strcpy(sql, (SQLCHAR *)"update example_schema.example_table set name = 'english-new' where name='english' ");
+    strcpy(sql, (SQLCHAR *)"UPDATE TEST SET NAME = 'ENGLISH-NEW' WHERE NAME='ENGLISH' ");
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
     if (RC_NOTSUCCESSFUL(sret))
     {
@@ -95,7 +116,7 @@ int main(void)
     printf("odbc: update success\n");
 
     // 查询数据
-    strcpy(sql, (SQLCHAR *)"select * from example_schema.example_table");
+    strcpy(sql, (SQLCHAR *)"SELECT * FROM TEST");
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
     if (RC_NOTSUCCESSFUL(sret))
     {
