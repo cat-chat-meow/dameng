@@ -12,6 +12,16 @@
 /* 检测返回代码是否为失败标志，当为失败标志返回 TRUE，否则返回 FALSE */
 #define RC_NOTSUCCESSFUL(rc) (!(RC_SUCCESSFUL(rc)))
 
+#define FREE_HANDLE(str, rc, henv, hdbc, is_exit) \
+    if (RC_NOTSUCCESSFUL(rc))                     \
+    {                                             \
+        printf(str);                              \
+        SQLFreeHandle(SQL_HANDLE_DBC, hdbc);      \
+        SQLFreeHandle(SQL_HANDLE_ENV, henv);      \
+        if (is_exit)                              \
+            exit(0);                              \
+    }
+
 HENV henv;      /* 环境句柄 */
 HDBC hdbc;      /* 连接句柄 */
 HSTMT hstmt;    /* 语句句柄 */
@@ -21,7 +31,7 @@ int main(void)
 {
     db_config config = read_config("config.ini");
 
-    SQLCHAR sql[] = "insert into PRODUCTION.PRODUCT_CATEGORY(NAME) values(?)";
+    SQLCHAR sql[] = "";
     SQLCHAR in_c1[20] = {0};
     SQLLEN in_c1_ind_ptr;
 
@@ -42,34 +52,43 @@ int main(void)
                       (SQLCHAR *)config.db_name, SQL_NTS,
                       (SQLCHAR *)config.db_user, SQL_NTS,
                       (SQLCHAR *)config.db_pwd, SQL_NTS);
-    if (RC_NOTSUCCESSFUL(sret))
-    {
-        printf("odbc: fail to connect to server!\n");
-        SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
-        SQLFreeHandle(SQL_HANDLE_ENV, henv);
-        exit(0);
-    }
+    FREE_HANDLE("odbc: fail to connect to server!\n", sret, henv, hdbc, 1);
     printf("odbc: connect to server success!\n");
 
     /* 申请一个语句句柄 */
     SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
 
+    // 创建表
+    strcpy(sql, (SQLCHAR *)"CREATE TABLE TEST001(ID INT, NAME VARCHAR(20))");
+    sret = SQLExecDirect(hstmt, sql, SQL_NTS);
+    printf("odbc: handle sql %s \n sret %d \n", sql, sret);
+    if (RC_NOTSUCCESSFUL(sret))
+    {
+        FREE_HANDLE("odbc: create table fail!\n", sret, henv, hdbc, 0);
+        SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
+    }
+    printf("odbc: create table success!\n");
+
     // 清空表，初始化测试环境
-    sret = SQLExecDirect(hstmt, (SQLCHAR *)"delete from PRODUCTION.PRODUCT_CATEGORY", SQL_NTS);
+    strcpy(sql, (SQLCHAR *)"delete from TEST001");
+    sret = SQLExecDirect(hstmt, sql, SQL_NTS);
+    printf("odbc: handle sql %s \n sret %d \n", sql, sret);
 
     // 绑定参数方式插入数据
+    strcpy(sql, (SQLCHAR *)"insert into TEST001(NAME) values(?)");
     printf("insert with bind..\nsql: %s\npara: %s\n", (char *)sql, (char *)in_c1);
     sret = SQLPrepare(hstmt, sql, SQL_NTS);
     sret = SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, sizeof(in_c1), 0, in_c1, 0, &in_c1_ind_ptr);
     sret = SQLExecute(hstmt);
     if (RC_NOTSUCCESSFUL(sret))
     {
-        printf("odbc: insert into table with bind fail!\n");
+        FREE_HANDLE("odbc: insert into table with bind fail!\n", sret, henv, hdbc, 0);
+        SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
     }
     printf("odbc: insert into table with bind success!\n");
 
     // 查询数据
-    SQLExecDirect(hstmt, (SQLCHAR *)"select * from PRODUCTION.PRODUCT_CATEGORY", SQL_NTS);
+    SQLExecDirect(hstmt, (SQLCHAR *)"select * from TEST001", SQL_NTS);
     SQLBindCol(hstmt, 1, SQL_C_SLONG, &out_c1, sizeof(out_c1), &out_c1_ind);
     SQLBindCol(hstmt, 2, SQL_C_CHAR, &out_c2, sizeof(out_c2), &out_c2_ind);
 

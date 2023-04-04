@@ -58,7 +58,7 @@ int main(void)
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
     // row count 不能用于 select 查询？
     SQLRowCount(hstmt, &row_count);
-    printf("odbc: handle sql %s \n sret{%d} row{%d}\n", sql, sret, row_count);
+    printf("odbc: handle sql %s \n sret{%d} row{%d}\n", (char *)sql, sret, row_count);
     // if (!row_count || RC_NOTSUCCESSFUL(sret))
     {
 
@@ -68,7 +68,7 @@ int main(void)
         printf("odbc: no EXAMPLE_SCHEMA then create\n");
         strcpy(sql, (SQLCHAR *)"CREATE SCHEMA EXAMPLE_SCHEMA");
         sret = SQLExecDirect(hstmt, sql, SQL_NTS);
-        printf("odbc: handle sql %s \n sret %d \n", sql, sret);
+        printf("odbc: handle sql %s \n sret %d \n", (char *)sql, sret);
         // SQLRowCount returns -1 成功也是 -1 ？？？
         if (RC_NOTSUCCESSFUL(sret))
         {
@@ -77,7 +77,7 @@ int main(void)
         }
         strcpy(sql, (SQLCHAR *)"CREATE TABLE TEST(ID INT NOT NULL, NAME VARCHAR(20))");
         sret = SQLExecDirect(hstmt, sql, SQL_NTS);
-        printf("odbc: handle sql %s \n sret %d \n", sql, sret);
+        printf("odbc: handle sql %s \n sret %d \n", (char *)sql, sret);
         if (RC_NOTSUCCESSFUL(sret))
         {
             FREE_HANDLE("odbc: create table fail!\n", sret, henv, hdbc, 0);
@@ -89,6 +89,7 @@ int main(void)
     // 插入数据
     strcpy(sql, (SQLCHAR *)"INSERT INTO TEST(ID, NAME) VALUES('1', 'CHINESE'), ('2', 'MATH'), ('3', 'ENGLISH'), ('4', 'GYM')");
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
+    printf("odbc: handle sql %s \n sret %d \n", (char *)sql, sret);
     if (RC_NOTSUCCESSFUL(sret))
     {
         FREE_HANDLE("odbc: insert fail!\n", sret, henv, hdbc, 1);
@@ -98,30 +99,30 @@ int main(void)
     // 删除数据
     strcpy(sql, (SQLCHAR *)"DELETE FROM TEST WHERE NAME='MATH' ");
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
+    printf("odbc: handle sql %s \n sret %d \n", (char *)sql, sret);
     if (RC_NOTSUCCESSFUL(sret))
     {
-        printf("odbc: delete fail\n");
-        exit(0);
+        FREE_HANDLE("odbc: delete fail!\n", sret, henv, hdbc, 1);
     }
     printf("odbc: delete success\n");
 
     // 更新数据
     strcpy(sql, (SQLCHAR *)"UPDATE TEST SET NAME = 'ENGLISH-NEW' WHERE NAME='ENGLISH' ");
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
+    printf("odbc: handle sql %s \n sret %d \n", (char *)sql, sret);
     if (RC_NOTSUCCESSFUL(sret))
     {
-        printf("odbc: update fail\n");
-        exit(0);
+        FREE_HANDLE("odbc: update fail!\n", sret, henv, hdbc, 1);
     }
     printf("odbc: update success\n");
 
     // 查询数据
     strcpy(sql, (SQLCHAR *)"SELECT * FROM TEST");
     sret = SQLExecDirect(hstmt, sql, SQL_NTS);
+    printf("odbc: handle sql %s \n sret %d \n", (char *)sql, sret);
     if (RC_NOTSUCCESSFUL(sret))
     {
-        printf("odbc: select fail\n");
-        exit(0);
+        FREE_HANDLE("odbc: select fail!\n", sret, henv, hdbc, 1);
     }
     SQLBindCol(hstmt, 1, SQL_C_SLONG, &out_c1, sizeof(out_c1), &out_c1_ind);
     SQLBindCol(hstmt, 2, SQL_C_CHAR, &out_c2, sizeof(out_c2), &out_c2_ind);
