@@ -88,8 +88,9 @@ docker_run() {
         docker network create --driver bridge ${CUSTOM_BRIDGE_NAME} \
         --subnet=172.20.0.0/24
 
-    case $1 in
-    dmdb)
+
+    if [ "$1" = "dmdb" ] 
+    then
         rm_docker dm8_01
         docker run -d \
             -p 5236:5236 \
@@ -102,38 +103,31 @@ docker_run() {
             -e INSTANCE_NAME=dm8_01 \
             -v /data/dm8_01:/opt/dmdbms/data \
             dm8_single:v8.1.2.128_ent_x86_64_ctm_pack4
-        ;;
-    demo0)
+        exit 0    
+    fi
+
+    if [ "$1" = "demo0" ] 
+    then
         docker run -it \
+            --privileged=true \
             --name ${run_name} \
             --network ${CUSTOM_BRIDGE_NAME} \
             --ip 172.20.0.6 \
-            ${docker_name}:latest
-        ;;
-    demo1)
+            ${docker_name}:latest    
+        exit 0
+    fi
+
+    if echo "$1" | grep -q "demo"; then
         docker run -it \
+            --privileged=true \
             --name ${run_name} \
             -e LD_LIBRARY_PATH=/opt/dmdbms/bin \
             -e DM_HOME=/opt/dmdbms \
             ${docker_name}:latest
-        ;;
-    demo2)
-        docker run -it \
-            --name ${run_name} \
-            -e LD_LIBRARY_PATH=/opt/dmdbms/bin \
-            -e DM_HOME=/opt/dmdbms \
-            ${docker_name}:latest
-        ;;
-    demo3)
-        docker run -it \
-            --name ${run_name} \
-            -e LD_LIBRARY_PATH=/opt/dmdbms/bin \
-            -e DM_HOME=/opt/dmdbms \
-            ${docker_name}:latest
-        ;;
-    *)
-        ;;
-    esac
+        exit 0
+    else
+        echo "字符串 $1 不包含 demo"
+    fi
 }
 
 
