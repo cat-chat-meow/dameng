@@ -20,6 +20,17 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get install -y \
     unixodbc unixodbc-dev
 
+
+# ---------------------------------
+# mysql test
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    mysql-server
+RUN apt-get install -y \
+    zlib1g-dev \
+    libmysqlclient-dev
+
+# ---------------------------------
+
 COPY vimrc /root/.vimrc
 
 FROM modfiy_dm8 AS dm_cpp_demo_runtime
