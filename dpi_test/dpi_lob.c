@@ -6,15 +6,15 @@
 #include "DPIext.h"
 #include "DPItypes.h"
 
-#define DM_SVR "192.168.14.137:5236"
+#define DM_SVR "127.0.0.1:5236"
 #define DM_USER "SYSDBA"
-#define DM_PWD "SYSDBA"
+#define DM_PWD "SYSDBA001"
 #define IN_FILE "/data/c_test_code/DM8_SQL.pdf"
 #define OUT_FILE "/data/c_test_code/DM8_SQL_1.pdf"
-#define CHARS 80*1024 //一次读取和写入的字节数 80 KB
+#define CHARS 80 * 1024 // 一次读取和写入的字节数 80 KB
 
-dhenv henv; /* 环境句柄 */
-dhcon hcon; /* 连接句柄 */
+dhenv henv;   /* 环境句柄 */
+dhcon hcon;   /* 连接句柄 */
 dhstmt hstmt; /* 语句句柄 */
 dhdesc hdesc; /* 描述符句柄 */
 DPIRETURN rt; /* 函数返回值 */
@@ -39,23 +39,23 @@ void dpi_err_msg_print(sdint2 hndl_type, dhandle hndl)
 */
 int main(int argc, char *argv[])
 {
-    FILE*  pfile = NULL;
-    sdbyte  tmpbuf[CHARS];
+    FILE *pfile = NULL;
+    sdbyte tmpbuf[CHARS];
     slength len = 0;
     ulength row_num = 0;
     slength val_len = 0;
 
-    sdint4     c1 =1; 
-    sdint4     c2 = DSQL_DATA_AT_EXEC;
-    slength     c1_ind_ptr = 0;
-    slength     c2_ind_ptr = DSQL_DATA_AT_EXEC;
-    dpointer     c2_val_ptr;
+    sdint4 c1 = 1;
+    sdint4 c2 = DSQL_DATA_AT_EXEC;
+    slength c1_ind_ptr = 0;
+    slength c2_ind_ptr = DSQL_DATA_AT_EXEC;
+    dpointer c2_val_ptr;
 
-    //连接数据库
+    // 连接数据库
     rt = dpi_alloc_env(&henv);
     rt = dpi_alloc_con(henv, &hcon);
     rt = dpi_login(hcon, (sdbyte *)DM_SVR, (sdbyte *)DM_USER, (sdbyte *)DM_PWD);
-    if(!DSQL_SUCCEEDED(rt))
+    if (!DSQL_SUCCEEDED(rt))
     {
         dpi_err_msg_print(DSQL_HANDLE_DBC, hcon);
         return rt;
@@ -63,11 +63,11 @@ int main(int argc, char *argv[])
 
     rt = dpi_alloc_stmt(hcon, &hstmt);
 
-    //清空表，初始化测试环境
+    // 清空表，初始化测试环境
     rt = dpi_exec_direct(hstmt, (sdbyte *)"drop table PRODUCTION.BIG_DATA");
     rt = dpi_exec_direct(hstmt, (sdbyte *)"create table PRODUCTION.BIG_DATA(c1 int, c2 blob)");
 
-    //读取文件数据，插入LOB列
+    // 读取文件数据，插入LOB列
     pfile = fopen(IN_FILE, "rb");
     if (pfile == NULL)
     {
@@ -76,8 +76,8 @@ int main(int argc, char *argv[])
     }
 
     rt = dpi_prepare(hstmt, (sdbyte *)"insert into PRODUCTION.BIG_DATA(c1,c2) values(?,?)");
-    rt = dpi_bind_param(hstmt, 1, DSQL_PARAM_INPUT, DSQL_C_SLONG,  DSQL_INT, sizeof(c1), 0, &c1, sizeof(c1), NULL);
-    rt = dpi_bind_param(hstmt, 2, DSQL_PARAM_INPUT, DSQL_C_BINARY,  DSQL_BLOB, sizeof(c2), 0, &c2, sizeof(c2), &c2_ind_ptr);
+    rt = dpi_bind_param(hstmt, 1, DSQL_PARAM_INPUT, DSQL_C_SLONG, DSQL_INT, sizeof(c1), 0, &c1, sizeof(c1), NULL);
+    rt = dpi_bind_param(hstmt, 2, DSQL_PARAM_INPUT, DSQL_C_BINARY, DSQL_BLOB, sizeof(c2), 0, &c2, sizeof(c2), &c2_ind_ptr);
     if (dpi_exec(hstmt) == DSQL_NEED_DATA)
     {
         if (dpi_param_data(hstmt, &c2_val_ptr) == DSQL_NEED_DATA) /* 绑定数据 */
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     printf("dpi: insert data into col of lob success\n");
     fclose(pfile);
 
-    //读取 LOB 列数据，写入文件
+    // 读取 LOB 列数据，写入文件
     pfile = fopen((const char *)OUT_FILE, "wb");
     if (pfile == NULL)
     {
@@ -107,9 +107,9 @@ int main(int argc, char *argv[])
 
     dpi_exec_direct(hstmt, (sdbyte *)"select c1, c2 from PRODUCTION.BIG_DATA");
     dpi_bind_col(hstmt, 1, DSQL_C_SLONG, &c1, sizeof(c1), &c1_ind_ptr);
-    while(dpi_fetch(hstmt, &row_num) != DSQL_NO_DATA)
+    while (dpi_fetch(hstmt, &row_num) != DSQL_NO_DATA)
     {
-        while(DSQL_SUCCEEDED(dpi_get_data(hstmt, 2, DSQL_C_BINARY, tmpbuf, CHARS, &val_len)))
+        while (DSQL_SUCCEEDED(dpi_get_data(hstmt, 2, DSQL_C_BINARY, tmpbuf, CHARS, &val_len)))
         {
             len = val_len > CHARS ? CHARS : val_len;
             fwrite(tmpbuf, sizeof(char), len, pfile);
@@ -119,9 +119,9 @@ int main(int argc, char *argv[])
     fclose(pfile);
     printf("dpi: get data from col of lob success\n");
 
-    //断开数据库连接
+    // 断开数据库连接
     rt = dpi_logout(hcon);
-    if(!DSQL_SUCCEEDED(rt))
+    if (!DSQL_SUCCEEDED(rt))
     {
         dpi_err_msg_print(DSQL_HANDLE_DBC, hcon);
         return rt;
@@ -132,4 +132,3 @@ int main(int argc, char *argv[])
 
     return rt;
 }
-
