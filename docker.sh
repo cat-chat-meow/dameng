@@ -68,6 +68,9 @@ docker_build() {
     demo2)
         docker build -t ${1} -f conf.dm.mirror.dockerfile .
         ;;
+    demo3)
+        docker build -t ${1} -f conf.base.deps.dockerfile .
+        ;;
     *);;
     esac
 }
@@ -115,6 +118,13 @@ docker_run() {
             ${docker_name}:latest
         ;;
     demo2)
+        docker run -it \
+            --name ${run_name} \
+            -e LD_LIBRARY_PATH=/opt/dmdbms/bin \
+            -e DM_HOME=/opt/dmdbms \
+            ${docker_name}:latest
+        ;;
+    demo3)
         docker run -it \
             --name ${run_name} \
             -e LD_LIBRARY_PATH=/opt/dmdbms/bin \

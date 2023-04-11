@@ -26,6 +26,7 @@ RUN apt-get install -y \
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
     mysql-server
 RUN apt-get install -y \
+    libboost-all-dev \
     zlib1g-dev \
     libmysqlclient-dev
 
