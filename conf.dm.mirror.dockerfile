@@ -1,3 +1,5 @@
+# 仅安装 达梦数据库 没做其他测试，为获取达梦头文件
+
 FROM debian:bullseye
 
 COPY sources.list /etc/apt/

@@ -14,6 +14,12 @@ if [[ $PARA_NUM -ne 2 && $PARA_NUM -ne 4 ]];then
     exit 1
 fi
 
+# build opt
+#   demo0 无法正常使用，需要另一个 docker 支持，两个 docker 互联
+#   demo1 可正常使用，base 达梦8 官方 docker 镜像 支持 odbc 和 dpi
+#   demo2 仅安装 达梦数据库 没做其他测试，为获取达梦头文件
+
+
 CUSTOM_BRIDGE_NAME=dm_network
 
 docker_name=dm_demo
@@ -59,6 +65,9 @@ docker_build() {
     demo1)
         docker build -t ${1} -f conf.modify.dockerfile .
         ;;
+    demo2)
+        docker build -t ${1} -f conf.dm.mirror.dockerfile .
+        ;;
     *);;
     esac
 }
@@ -99,6 +108,13 @@ docker_run() {
             ${docker_name}:latest
         ;;
     demo1)
+        docker run -it \
+            --name ${run_name} \
+            -e LD_LIBRARY_PATH=/opt/dmdbms/bin \
+            -e DM_HOME=/opt/dmdbms \
+            ${docker_name}:latest
+        ;;
+    demo2)
         docker run -it \
             --name ${run_name} \
             -e LD_LIBRARY_PATH=/opt/dmdbms/bin \

@@ -1,3 +1,5 @@
+# base 达梦8 官方 docker 镜像 支持 odbc 和 dpi
+
 FROM dm8_single:v8.1.2.128_ent_x86_64_ctm_pack4 AS modfiy_dm8
 
 # cat /etc/issue
