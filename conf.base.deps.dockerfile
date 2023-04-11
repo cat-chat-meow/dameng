@@ -2,8 +2,10 @@
 
 FROM vdna-deps-env:latest
 
-RUN apt-get update
-RUN apt-get install -y \
+# COPY sources.list.debian8 /etc/apt/
+
+# RUN apt-get update
+RUN apt-get install -y --force-yes \
     unzip
 
 # add group
@@ -20,7 +22,7 @@ RUN sh -c 'echo "dmdba hard nofile 65536" >> /etc/security/limits.conf' && \
 WORKDIR /app
 COPY . /app
 
-RUN wget https://download.dameng.com/eco/adapter/DM8/202302/dm8_20230104_x86_rh6_64.zip
+# RUN wget https://download.dameng.com/eco/adapter/DM8/202302/dm8_20230104_x86_rh6_64.zip
 # RUN mount -o loop /app/dm8_setup_rh7_64_ent_8.1.1.45_20191121.iso /mnt
 
 RUN mkdir /dm8
