@@ -6,13 +6,15 @@
 #define MAX_KEY_LENGTH 256
 #define MAX_VALUE_LENGTH 256
 
+#define CONFIG_INI "../etc/config.ini"
+
 int read_config_(void)
 {
     FILE *fp;
     char buffer[MAX_LINE_LENGTH];
     char key[MAX_KEY_LENGTH], value[MAX_VALUE_LENGTH];
 
-    fp = fopen("config.ini", "r");
+    fp = fopen(CONFIG_INI, "r");
     if (fp == NULL)
     {
         printf("Can not open config file!\n");
@@ -45,6 +47,7 @@ void trim_newline(char *str)
 typedef struct
 {
     char db_name[100];
+    char db_server[100];
     char db_user[100];
     char db_pwd[100];
 } db_config;
@@ -67,6 +70,12 @@ db_config read_config(const char *filename)
             trim_newline(token);
             strcpy(config.db_name, token);
         }
+        if (strcmp(token, "DB_SVR") == 0)
+        {
+            token = strtok(NULL, "=");
+            trim_newline(token);
+            strcpy(config.db_server, token);
+        }
         if (strcmp(token, "UID") == 0)
         {
             token = strtok(NULL, "=");
@@ -81,7 +90,7 @@ db_config read_config(const char *filename)
         }
     }
     fclose(fp);
-    printf("parser config, db_name %s db_user %s db_pwd %s \n",
-           config.db_name, config.db_user, config.db_pwd);
+    printf("parser config, db_name %s db_server %s db_user %s db_pwd %s \n",
+           config.db_name, config.db_server, config.db_user, config.db_pwd);
     return config;
 }

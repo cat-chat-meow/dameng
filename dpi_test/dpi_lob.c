@@ -6,9 +6,8 @@
 #include "DPIext.h"
 #include "DPItypes.h"
 
-#define DM_SVR "127.0.0.1:5236"
-#define DM_USER "SYSDBA"
-#define DM_PWD "SYSDBA001"
+#include <config_parser.h>
+
 #define IN_FILE "/data/c_test_code/DM8_SQL.pdf"
 #define OUT_FILE "/data/c_test_code/DM8_SQL_1.pdf"
 #define CHARS 80 * 1024 // 一次读取和写入的字节数 80 KB
@@ -39,6 +38,8 @@ void dpi_err_msg_print(sdint2 hndl_type, dhandle hndl)
 */
 int main(int argc, char *argv[])
 {
+    db_config config = read_config("config.ini");
+
     FILE *pfile = NULL;
     sdbyte tmpbuf[CHARS];
     slength len = 0;
@@ -54,7 +55,10 @@ int main(int argc, char *argv[])
     // 连接数据库
     rt = dpi_alloc_env(&henv);
     rt = dpi_alloc_con(henv, &hcon);
-    rt = dpi_login(hcon, (sdbyte *)DM_SVR, (sdbyte *)DM_USER, (sdbyte *)DM_PWD);
+    rt = dpi_login(hcon,
+                   (sdbyte *)config.db_server,
+                   (sdbyte *)config.db_user,
+                   (sdbyte *)config.db_pwd);
     if (!DSQL_SUCCEEDED(rt))
     {
         dpi_err_msg_print(DSQL_HANDLE_DBC, hcon);

@@ -6,9 +6,7 @@
 #include "DPIext.h"
 #include "DPItypes.h"
 
-#define DM_SVR "127.0.0.1:5236"
-#define DM_USER "SYSDBA"
-#define DM_PWD "SYSDBA001"
+#include <config_parser.h>
 
 dhenv henv;   /* 环境句柄 */
 dhcon hcon;   /* 连接句柄 */
@@ -36,6 +34,8 @@ void dpi_err_msg_print(sdint2 hndl_type, dhandle hndl)
 */
 int main(int argc, char *argv[])
 {
+    db_config config = read_config("config.ini");
+
     sdint4 out_c1 = 0;
     sdbyte out_c2[20] = {0};
     slength out_c1_ind = 0;
@@ -45,7 +45,10 @@ int main(int argc, char *argv[])
     // 连接数据库
     rt = dpi_alloc_env(&henv);
     rt = dpi_alloc_con(henv, &hcon);
-    rt = dpi_login(hcon, (sdbyte *)DM_SVR, (sdbyte *)DM_USER, (sdbyte *)DM_PWD);
+    rt = dpi_login(hcon,
+                   (sdbyte *)config.db_server,
+                   (sdbyte *)config.db_user,
+                   (sdbyte *)config.db_pwd);
     if (!DSQL_SUCCEEDED(rt))
     {
         dpi_err_msg_print(DSQL_HANDLE_DBC, hcon);

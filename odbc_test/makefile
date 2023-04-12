@@ -1,12 +1,14 @@
 CC=gcc
 
+PROJECT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
 includepath=$(DM_HOME)/include
 binpath=$(DM_HOME)/bin
 libpath=$(DM_HOME)/bin/libdodbc.so
 #libpath=$(DM_HOME)/bin/
 vpath=./
 
-CFLAGS=-I$(includepath) -I/usr/include -I./ -DDM64 -Wall
+CFLAGS=-I$(includepath) -I/usr/include -I$(PROJECT_DIR)../include/ -DDM64 -Wall
 LINKFLAGS=-L$(binpath) -lodbc -Wall -Wl,-rpath $(libpath)
 
 %.o:%.c

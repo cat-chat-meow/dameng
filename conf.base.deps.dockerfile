@@ -31,3 +31,5 @@ RUN chown dmdba:dinstall -R /dm8/ && chmod -R 755 /dm8 && \
     chown dmdba:dinstall -R /dm8/data && chmod -R 755 /dm8/data
 
 RUN bash mount_iso.sh
+
+RUN sed -i "s/PWD=SYSDBA001/PWD=SYSDBA/g" etc/config.ini
