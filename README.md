@@ -1,21 +1,13 @@
 # 达梦数据库实践
 
+## [QA](./qa.md)
+
 ## 傻瓜教程
 
 ```bash
 ./docker.sh -b demo1
 ./docker.sh -r demo1 -name demo_cpp
 ```
-
-## QA
-
-调试通过的示例
-
-- [odbc_conn](./odbctest/odbc_conn.c)
-- [odbc_dml](./odbctest/odbc_dml.c)
-- [odbc_bind](./odbctest/odbc_bind.c) 之前存在内存偏移，是因为类型不匹配导致 已修复
-
-[odbc_lob](./odbctest/odbc_lob.c) 未调试
 
 ## docker
 
