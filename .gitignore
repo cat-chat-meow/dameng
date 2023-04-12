@@ -6,3 +6,4 @@ __pycache__/
 .augus_output
 test**
 output**
+*.zip

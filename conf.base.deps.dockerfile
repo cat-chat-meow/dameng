@@ -25,8 +25,9 @@ COPY . /app
 # RUN wget https://download.dameng.com/eco/adapter/DM8/202302/dm8_20230104_x86_rh6_64.zip
 # RUN mount -o loop /opt/dm8_20230104_x86_rh6_64.iso /mnt
 
-RUN mkdir /dm8
+RUN mkdir -p /dm8 /dm8/data
 # 修改权限
-RUN chown dmdba:dinstall -R /dm8/ && chmod -R 755 /dm8
+RUN chown dmdba:dinstall -R /dm8/ && chmod -R 755 /dm8 && \
+    chown dmdba:dinstall -R /dm8/data && chmod -R 755 /dm8/data
 
-# USER dmdba
+RUN bash mount_iso.sh

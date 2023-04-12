@@ -6,13 +6,8 @@
 ## step
 
 ```bash
-# host
-docker cp dm8_20230104_x86_rh6_64.zip demo_deps:/opt/
-
 # docker mount iso
-cd /opt/
-unzip dm8_20230104_x86_rh6_64.zip
-mount -o loop /opt/dm8_20230104_x86_rh6_64.iso /mnt
+mount -o loop /app/dm8_20230104_x86_rh6_64.iso /mnt
 
 # db install
 su - dmdba
@@ -20,19 +15,24 @@ cd /mnt/ && ./DMInstall.bin -i
 # choose
 # en, no key, yes timezone 21, 1 typical, dir /dm8
 
-# db config
-su - root
-mkdir -p /dm8/data && chown dmdba:dinstall -R /dm8/data && chmod -R 755 /dm8/data 
-su - dmdba
-cd /dm8/bin
-./dminit help
-./dminit path=/dm8/data
-./dminit path=/dm8/data PAGE_SIZE=32 EXTENT_SIZE=32 CASE_SENSITIVE=y CHARSET=1 DB_NAME=DMDB INSTANCE_NAME=DBSERVER PORT_NUM=5237
+# then handle db_config.sh
 
-# registration service
+# then 
 su - root
-cd /dm8/script/root
-./dm_service_installer.sh -t dmserver -dm_ini /dm8/data/DAMENG/dm.ini -p DMSERVER
+# registration service
+/dm8/script/root/dm_service_installer.sh -t dmserver -dm_ini /dm8/data/DAMENG/dm.ini -p DMSERVER
+# finish create service dm then
+systemctl start DmServiceDMSERVER.service
+systemctl stop DmServiceDMSERVER.service
+systemctl restart DmServiceDMSERVER.service
+systemctl status DmServiceDMSERVER.service
+# 可前台启动，进入 DM 安装目录下的 bin 目录下，命令如下：
+./dmserver /dm/data/DAMENG/dm.ini
+# 该启动方式为前台启动，若想关闭数据库，则输入 exit 即可。
+# 也可进入 DM 安装目录下的 bin 目录下，启动/停止/重启数据库，如下所示：
+./DmServiceDMSERVER start/stop/restart
+# 查看数据库状态，如下所示：
+./DmServiceDMSERVER status
 ```
 
 ## docker 内使用`systemctl`命令报错
@@ -86,4 +86,5 @@ docker 启动没有使用 privileged=true
 由于项目代码使用 Debian:jessie 编译，无法直接在 base 官方镜像的 docker 中正常运行。
 
 故而采用如下几种方案
+
 1. 使用 base 项目代码的镜像，在镜像里手动安装配置达梦数据库，
