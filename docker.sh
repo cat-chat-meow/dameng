@@ -75,6 +75,8 @@ docker_build() {
     esac
 }
 
+path_dm=/opt/dmdbms
+
 docker_run() {
     if [ -z $1 ]; then
         echo "no option, exit"
@@ -91,6 +93,7 @@ docker_run() {
 
     if [ "$1" = "dmdb" ] 
     then
+        path_dm=/opt/dmdbms
         rm_docker dm8_01
         docker run -d \
             -p 5236:5236 \
@@ -99,9 +102,9 @@ docker_run() {
             --ip 172.20.0.100 \
             --privileged=true \
             -e PAGE_SIZE=16 \
-            -e LD_LIBRARY_PATH=/opt/dmdbms/bin \
+            -e LD_LIBRARY_PATH=$path_dm/bin \
             -e INSTANCE_NAME=dm8_01 \
-            -v /data/dm8_01:/opt/dmdbms/data \
+            -v /data/dm8_01:$path_dm/data \
             dm8_single:v8.1.2.128_ent_x86_64_ctm_pack4
         exit 0    
     fi
@@ -118,11 +121,12 @@ docker_run() {
     fi
 
     if echo "$1" | grep -q "demo"; then
+        path_dm=/dm8
         docker run -it \
             --privileged=true \
             --name ${run_name} \
-            -e LD_LIBRARY_PATH=/opt/dmdbms/bin \
-            -e DM_HOME=/opt/dmdbms \
+            -e LD_LIBRARY_PATH=$path_dm/bin \
+            -e DM_HOME=$path_dm \
             ${docker_name}:latest
         exit 0
     else
