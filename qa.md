@@ -3,6 +3,48 @@
 - demo3 privileged 调试 达梦
 - deps docker no privileged 使用 mysql 作为参考
 
+## step
+
+```bash
+# host
+docker cp dm8_20230104_x86_rh6_64.zip demo_deps:/opt/
+
+# docker mount iso
+cd /opt/
+unzip dm8_20230104_x86_rh6_64.zip
+mount -o loop /opt/dm8_20230104_x86_rh6_64.iso /mnt
+
+# db install
+su - dmdba
+cd /mnt/ && ./DMInstall.bin -i
+# choose
+# en, no key, yes timezone 21, 1 typical, dir /dm8
+
+# db config
+su - root
+mkdir -p /dm8/data && chown dmdba:dinstall -R /dm8/data && chmod -R 755 /dm8/data 
+su - dmdba
+cd /dm8/bin
+./dminit help
+./dminit path=/dm8/data
+./dminit path=/dm8/data PAGE_SIZE=32 EXTENT_SIZE=32 CASE_SENSITIVE=y CHARSET=1 DB_NAME=DMDB INSTANCE_NAME=DBSERVER PORT_NUM=5237
+
+# registration service
+su - root
+cd /dm8/script/root
+./dm_service_installer.sh -t dmserver -dm_ini /dm8/data/DAMENG/dm.ini -p DMSERVER
+```
+
+## docker 内使用`systemctl`命令报错
+
+使用`/usr/sbin/init`同时添加`--privileged=true`参数就能够使用`systemctl`了
+
+```bash
+docker run -it --name name <image_name>
+# 改为
+docker run -it --name name --privileged=true <image_name> /sbin/init
+```
+
 ## 关于`privileged`选项
 
 mount -o loop dm8_20230104_x86_rh6_64.iso /mnt
@@ -38,3 +80,10 @@ docker 启动没有使用 privileged=true
 - [odbc_bind](./odbctest/odbc_bind.c) 之前存在内存偏移，是因为类型不匹配导致 已修复
 
 [odbc_lob](./odbctest/odbc_lob.c) 未调试
+
+## 方案记录
+
+由于项目代码使用 Debian:jessie 编译，无法直接在 base 官方镜像的 docker 中正常运行。
+
+故而采用如下几种方案
+1. 使用 base 项目代码的镜像，在镜像里手动安装配置达梦数据库，

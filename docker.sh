@@ -122,12 +122,12 @@ docker_run() {
 
     if echo "$1" | grep -q "demo"; then
         path_dm=/dm8
-        docker run -it \
+        docker run -itd \
             --privileged=true \
             --name ${run_name} \
             -e LD_LIBRARY_PATH=$path_dm/bin \
             -e DM_HOME=$path_dm \
-            ${docker_name}:latest
+            ${docker_name}:latest /sbin/init
         exit 0
     else
         echo "字符串 $1 不包含 demo"
