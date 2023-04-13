@@ -43,7 +43,11 @@ COPY etc/odbc.ini /etc/odbc.ini
 COPY etc/odbcinst.ini /etc/odbcinst.ini
 
 WORKDIR /app
-COPY . /app
+
+COPY dpi_test /app/dpi_test
+COPY etc /app/etc
+COPY include /app/include
+COPY odbc_test /app/odbc_test
 
 # RUN g++ -o main main.cpp
 

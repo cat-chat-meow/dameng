@@ -1,4 +1,5 @@
-# 仅安装 达梦数据库 没做其他测试，为获取达梦头文件
+# 这个 docker 因为使用 deps base Debian jessie
+# 无法更新安装任何包 很难使用
 
 FROM vdna-deps-env:latest
 

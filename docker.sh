@@ -18,6 +18,7 @@ fi
 #   demo0 无法正常使用，需要另一个 docker 支持，两个 docker 互联
 #   demo1 可正常使用，base 达梦8 官方 docker 镜像 支持 odbc 和 dpi
 #   demo2 仅安装 达梦数据库 没做其他测试，为获取达梦头文件
+#   demo3 base deps 安装达梦数据库
 
 
 CUSTOM_BRIDGE_NAME=dm_network
@@ -83,6 +84,8 @@ docker_run() {
         exit 1
     fi
 
+    echo "run docker $1"
+
     has_bridge=$(docker network ls | grep ${CUSTOM_BRIDGE_NAME})
 
     # create bridge
@@ -93,7 +96,6 @@ docker_run() {
 
     if [ "$1" = "dmdb" ] 
     then
-        path_dm=/opt/dmdbms
         rm_docker dm8_01
         docker run -d \
             -p 5236:5236 \
@@ -120,14 +122,23 @@ docker_run() {
         exit 0
     fi
 
-    if echo "$1" | grep -q "demo"; then
+    if [ "$1" = "demo3" ] 
+    then
         path_dm=/dm8
         docker run -itd \
-            --privileged=true \
             --name ${run_name} \
             -e LD_LIBRARY_PATH=$path_dm/bin \
             -e DM_HOME=$path_dm \
             ${docker_name}:latest /sbin/init
+        exit 0
+    fi
+
+    if echo "$1" | grep -q "demo"; then
+        docker run -itd \
+            --name ${run_name} \
+            -e LD_LIBRARY_PATH=$path_dm/bin \
+            -e DM_HOME=$path_dm \
+            ${docker_name}:latest 
         exit 0
     else
         echo "字符串 $1 不包含 demo"

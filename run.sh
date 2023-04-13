@@ -11,6 +11,12 @@ fi
 
 run_name=""
 
+if [ "$1" = "dmdb" ] 
+then
+    ./docker.sh -r dmdb -name dm8_01
+    exit 0
+fi
+
 case $1 in
 0) run_name="demo0" ;;
 1) run_name="demo_cpp" ;;
