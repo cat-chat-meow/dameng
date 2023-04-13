@@ -30,7 +30,7 @@ SQLLEN row_count; /* 返回行数 */
 
 int main(void)
 {
-    db_config config = read_config("config.ini");
+    db_config config = read_config();
 
     int out_c1 = 0;
     SQLCHAR out_c2[20] = {0};

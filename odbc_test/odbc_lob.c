@@ -28,7 +28,7 @@ UCHAR errstate[5];
 
 int main(void)
 {
-    db_config config = read_config("config.ini");
+    db_config config = read_config();
 
     FILE *pfile = NULL;
     SQLCHAR tmpbuf[CHARS];

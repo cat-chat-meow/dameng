@@ -52,13 +52,14 @@ typedef struct
     char db_pwd[100];
 } db_config;
 
-db_config read_config(const char *filename)
+db_config read_config(void)
 {
     db_config config;
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(CONFIG_INI, "r");
     if (fp == NULL)
     {
-        // handle error
+        printf("Can not open config file! %s \n", CONFIG_INI);
+        return config;
     }
     char buf[1024];
     while (fgets(buf, sizeof(buf), fp) != NULL)

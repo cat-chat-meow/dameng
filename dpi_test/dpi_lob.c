@@ -38,7 +38,7 @@ void dpi_err_msg_print(sdint2 hndl_type, dhandle hndl)
 */
 int main(int argc, char *argv[])
 {
-    db_config config = read_config("config.ini");
+    db_config config = read_config();
 
     FILE *pfile = NULL;
     sdbyte tmpbuf[CHARS];

@@ -29,7 +29,7 @@ SQLRETURN sret; /* 返回代码 */
 
 int main(void)
 {
-    db_config config = read_config("config.ini");
+    db_config config = read_config();
 
     SQLCHAR sql[] = "insert into TEST001(NAME) values(?)";
     SQLCHAR in_c1[20] = {0};

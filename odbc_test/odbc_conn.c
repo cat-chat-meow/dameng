@@ -18,7 +18,7 @@ SQLRETURN sret; /* 返回代码 */
 
 int main(void)
 {
-    db_config config = read_config("config.ini");
+    db_config config = read_config();
 
     /* 申请一个环境句柄 */
     SQLAllocHandle(SQL_HANDLE_ENV, NULL, &henv);
