@@ -93,9 +93,8 @@ docker_run() {
         docker network create --driver bridge ${CUSTOM_BRIDGE_NAME} \
         --subnet=172.20.0.0/24
 
-
-    if [ "$1" = "dmdb" ] 
-    then
+    case $1 in
+    dmdb)
         rm_docker dm8_01
         docker run -d \
             -p 5236:5236 \
@@ -109,10 +108,8 @@ docker_run() {
             -v /data/dm8_01:$path_dm/data \
             dm8_single:v8.1.2.128_ent_x86_64_ctm_pack4
         exit 0    
-    fi
-
-    if [ "$1" = "demo0" ] 
-    then
+        ;;
+    demo0)
         docker run -it \
             --privileged=true \
             --name ${run_name} \
@@ -120,10 +117,24 @@ docker_run() {
             --ip 172.20.0.6 \
             ${docker_name}:latest    
         exit 0
-    fi
-
-    if [ "$1" = "demo3" ] 
-    then
+        ;;
+    demo1)
+        docker run -itd \
+            --name ${run_name} \
+            -e LD_LIBRARY_PATH=$path_dm/bin \
+            -e DM_HOME=$path_dm \
+            ${docker_name}:latest 
+        exit 0
+        ;;
+    demo2)
+        docker run -itd \
+            --name ${run_name} \
+            -e LD_LIBRARY_PATH=$path_dm/bin \
+            -e DM_HOME=$path_dm \
+            ${docker_name}:latest 
+        exit 0
+        ;;
+    demo3)
         path_dm=/dm8
         docker run -itd \
             --name ${run_name} \
@@ -131,7 +142,9 @@ docker_run() {
             -e DM_HOME=$path_dm \
             ${docker_name}:latest /sbin/init
         exit 0
-    fi
+        ;;
+    *);;
+    esac
 
     if echo "$1" | grep -q "demo"; then
         docker run -itd \
