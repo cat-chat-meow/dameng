@@ -5,6 +5,8 @@
 
 ## step
 
+安装流程，下载好 iso 的后续工作
+
 ```bash
 # docker mount iso
 mount -o loop /app/dm8_20230104_x86_rh6_64.iso /mnt

@@ -137,6 +137,7 @@ docker_run() {
     demo3)
         path_dm=/dm8
         docker run -itd \
+            --privileged=true \
             --name ${run_name} \
             -e LD_LIBRARY_PATH=$path_dm/bin \
             -e DM_HOME=$path_dm \
