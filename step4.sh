@@ -1,11 +1,10 @@
 #!/bin/bash
 
-if [ "$USER" != "dmdba" ]; then
-    echo "This script must be run as dmdba!"
-    exit 1
-fi
+. ./check_usr.sh
 
-# db config
+check_usr dmdba
+
+echo "db config"
 cd /dm8/bin
 ./dminit help
 ./dminit path=/dm8/data

@@ -8,22 +8,17 @@
 安装流程，下载好 iso 的后续工作
 
 ```bash
-# docker mount iso
-mount -o loop /app/dm8_20230104_x86_rh6_64.iso /mnt
+# root
+./step1.sh
+# su - dmdba
+./step2.sh
+# exit, use root
+./step3.sh
+# su - dmdba
+./step4.sh
+# exit, use root
+./step5.sh
 
-# db install
-su - dmdba
-cd /mnt/ && ./DMInstall.bin -i
-# choose
-# en, no key, yes timezone 21, 1 typical, dir /dm8
-
-# then handle db_config.sh
-
-# then 
-su - root
-# registration service
-/dm8/script/root/dm_service_installer.sh -t dmserver -dm_ini /dm8/data/DAMENG/dm.ini -p DMSERVER
-# finish create service dm then
 systemctl start DmServiceDMSERVER.service
 systemctl stop DmServiceDMSERVER.service
 systemctl restart DmServiceDMSERVER.service
