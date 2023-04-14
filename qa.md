@@ -85,8 +85,9 @@ docker 启动没有使用 privileged=true
 
 ## 方案记录
 
-由于项目代码使用 Debian:jessie 编译，无法直接在 base 官方镜像的 docker 中正常运行。
+每一个 docker
 
-故而采用如下几种方案
-
-1. 使用 base 项目代码的镜像，在镜像里手动安装配置达梦数据库，
+- demo0 无法正常使用，需要另一个 docker 支持，两个 docker 互联
+- demo1 可正常使用，base 达梦8 官方 docker 镜像 支持 odbc 和 dpi，可以正常调试示例代码
+- demo2 仅安装 达梦数据库 没做其他测试，为获取达梦头文件，详细安装流程没有尝试
+- demo3 base deps 安装达梦数据库，想在这里同时使用 mysql 和 达梦数据库，就有一个奇怪的问题，如果 docker 启动参数加上 `privileged=true` 会使 mysql 无法启动，如果不加该参数，则达梦数据库无法进行 mount

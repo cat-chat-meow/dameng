@@ -14,12 +14,7 @@ if [[ $PARA_NUM -ne 2 && $PARA_NUM -ne 4 ]];then
     exit 1
 fi
 
-# build opt
-#   demo0 无法正常使用，需要另一个 docker 支持，两个 docker 互联
-#   demo1 可正常使用，base 达梦8 官方 docker 镜像 支持 odbc 和 dpi
-#   demo2 仅安装 达梦数据库 没做其他测试，为获取达梦头文件
-#   demo3 base deps 安装达梦数据库
-
+# 各个 docker 的作用参看 qa.md
 
 CUSTOM_BRIDGE_NAME=dm_network
 
@@ -49,6 +44,14 @@ check_para(){
     esac
 }
 
+create_bridge(){
+    has_bridge=$(docker network ls | grep ${CUSTOM_BRIDGE_NAME})
+
+    # create bridge
+    [ -z "$has_bridge" ] && echo -e "create bridge\n" && \
+        docker network create --driver bridge ${CUSTOM_BRIDGE_NAME} \
+        --subnet=172.20.0.0/24
+}
 
 docker_build() {
     if [ -z $1 ]; then
@@ -86,15 +89,9 @@ docker_run() {
 
     echo "run docker $1"
 
-    has_bridge=$(docker network ls | grep ${CUSTOM_BRIDGE_NAME})
-
-    # create bridge
-    [ -z "$has_bridge" ] && echo -e "create bridge\n" && \
-        docker network create --driver bridge ${CUSTOM_BRIDGE_NAME} \
-        --subnet=172.20.0.0/24
-
     case $1 in
     dmdb)
+        create_bridge
         rm_docker dm8_01
         docker run -d \
             -p 5236:5236 \
@@ -113,8 +110,6 @@ docker_run() {
         docker run -it \
             --privileged=true \
             --name ${run_name} \
-            --network ${CUSTOM_BRIDGE_NAME} \
-            --ip 172.20.0.6 \
             ${docker_name}:latest    
         exit 0
         ;;
@@ -141,7 +136,7 @@ docker_run() {
             --name ${run_name} \
             -e LD_LIBRARY_PATH=$path_dm/bin \
             -e DM_HOME=$path_dm \
-            ${docker_name}:latest /sbin/init
+            ${docker_name}:latest
         exit 0
         ;;
     *);;

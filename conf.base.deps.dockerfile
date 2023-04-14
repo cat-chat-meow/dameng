@@ -30,8 +30,9 @@ RUN sh -c 'echo "dmdba hard nofile 65536" >> /etc/security/limits.conf' && \
 WORKDIR /app
 COPY . /app
 
-RUN wget -q https://download.dameng.com/eco/adapter/DM8/202302/dm8_20230104_x86_rh6_64.zip && \
-    ls -ld dm8_20230104_x86_rh6_64.zip
+ADD https://download.dameng.com/eco/adapter/DM8/202302/dm8_20230104_x86_rh6_64.zip /app
+# RUN wget -q https://download.dameng.com/eco/adapter/DM8/202302/dm8_20230104_x86_rh6_64.zip 
+RUN ls -ld dm8_20230104_x86_rh6_64.zip
 
 RUN mkdir -p /dm8 /dm8/data
 # 修改权限
