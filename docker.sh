@@ -136,7 +136,7 @@ docker_run() {
             --name ${run_name} \
             -e LD_LIBRARY_PATH=$path_dm/bin \
             -e DM_HOME=$path_dm \
-            ${docker_name}:latest
+            ${docker_name}:latest /sbin/init
         exit 0
         ;;
     *);;

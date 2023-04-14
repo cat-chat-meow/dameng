@@ -34,6 +34,8 @@ systemctl status DmServiceDMSERVER.service
 
 ## docker 内使用`systemctl`命令报错
 
+> Failed to get D-Bus connection: Unknown error -1
+
 使用`/usr/sbin/init`同时添加`--privileged=true`参数就能够使用`systemctl`了
 
 ```bash
