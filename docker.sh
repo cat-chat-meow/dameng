@@ -51,6 +51,8 @@ create_bridge(){
     [ -z "$has_bridge" ] && echo -e "create bridge\n" && \
         docker network create --driver bridge ${CUSTOM_BRIDGE_NAME} \
         --subnet=172.20.0.0/24
+    
+    echo "$CUSTOM_BRIDGE_NAME bridge exist"
 }
 
 docker_build() {
@@ -81,6 +83,8 @@ docker_build() {
 
 path_dm=/opt/dmdbms
 
+create_bridge
+
 docker_run() {
     if [ -z $1 ]; then
         echo "no option, exit"
@@ -91,7 +95,6 @@ docker_run() {
 
     case $1 in
     dmdb)
-        create_bridge
         rm_docker dm8_01
         docker run -d \
             -p 5236:5236 \
@@ -108,16 +111,24 @@ docker_run() {
         ;;
     demo0)
         docker run -it \
-            --privileged=true \
             --name ${run_name} \
+            --network ${CUSTOM_BRIDGE_NAME} \
+            --ip 172.20.0.20 \
             ${docker_name}:latest    
         exit 0
         ;;
     demo1)
         docker run -itd \
+            -p 5236:5236 \
             --name ${run_name} \
+            --network ${CUSTOM_BRIDGE_NAME} \
+            --ip 172.20.0.100 \
+            --privileged=true \
+            -e PAGE_SIZE=16 \
             -e LD_LIBRARY_PATH=$path_dm/bin \
+            -e INSTANCE_NAME=dm8_01 \
             -e DM_HOME=$path_dm \
+            -v /data/dm8_01:$path_dm/data \
             ${docker_name}:latest 
         exit 0
         ;;

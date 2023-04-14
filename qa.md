@@ -84,7 +84,9 @@ docker 启动没有使用 privileged=true
 
 每一个 docker
 
-- demo0 无法正常使用，需要另一个 docker 支持，两个 docker 互联
-- demo1 可正常使用，base 达梦8 官方 docker 镜像 支持 odbc 和 dpi，可以正常调试示例代码
+- demo0 改为项目源
+- demo1 可正常使用，base 达梦8 官方 docker 镜像 支持 odbc 和 dpi，可以正常调试示例代码，准备跨 docker 通讯，跨 demo0 和 demo1，跨不了，装达梦数据库太折磨了，继续弃用吧
 - demo2 仅安装 达梦数据库 没做其他测试，为获取达梦头文件，详细安装流程没有尝试
 - demo3 base deps 安装达梦数据库，想在这里同时使用 mysql 和 达梦数据库，就有一个奇怪的问题，如果 docker 启动参数加上 `privileged=true` 会使 mysql 无法启动，如果不加该参数，则达梦数据库无法进行 mount
+
+太凌乱了，移植性未免太差了。最终方案就是使用 demo3，不再调试 mysql 了，后续再做调试，仅调试达梦数据库。
