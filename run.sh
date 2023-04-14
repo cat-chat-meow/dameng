@@ -29,6 +29,7 @@ echo ">>> run"
 echo "$1 $run_name"
 echo ""
 
-./docker.sh -b demo$1 && \
-    ./docker.sh -r demo$1 -name $run_name && \
+[ -n "$2" ] && echo "need build" && ./docker.sh -b demo$1 
+
+./docker.sh -r demo$1 -name $run_name && \
     docker exec -it $run_name bash
