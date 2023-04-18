@@ -110,7 +110,7 @@ docker_run() {
         exit 0    
         ;;
     demo0)
-        docker run -it \
+        docker run -itd \
             --name ${run_name} \
             --network ${CUSTOM_BRIDGE_NAME} \
             --ip 172.20.0.20 \
