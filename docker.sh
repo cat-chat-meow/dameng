@@ -169,12 +169,12 @@ docker_run() {
 case $1 in
 -r)
     check_para 4
-    rm_docker $run_name
     docker_run $2
     exit 0
     ;;
 -b)
     check_para 2
+    rm_docker $run_name
     docker_build $2
     exit 0
     ;;
