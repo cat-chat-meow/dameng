@@ -8,3 +8,5 @@ if [ "$1" == "demo0" ]; then
 fi 
 
 exec "$@"
+
+make clean -C cppdbi && make -C cppdbi package BITS=64

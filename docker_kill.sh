@@ -1,6 +1,9 @@
 #!/bin/bash
 
 rm_docker() {
+
+    echo "!!! do not kill now !!!" && exit 0
+
     # kill rm exist
     echo -e "# kill rm exist\n"
     rm_id=$(docker ps -a | grep "$1" | cut -d ' ' -f 1)

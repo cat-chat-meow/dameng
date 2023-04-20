@@ -3,6 +3,11 @@ FROM vdna-deps-env:latest
 ENV MYSQL_ROOT_PASSWORD     123
 ENV DB_PKGS                 /root/custom_sql
 
+RUN apt-get install --force-yes -y \
+    vim
+
+COPY vimrc /root/.vimrc
+
 COPY . /app
 COPY entrypoint.sh /usr/local/bin/
 
@@ -14,6 +19,6 @@ RUN cp /app/init_mysql.sh /root/ && \
 
 RUN echo "free"
 
-ENTRYPOINT ["entrypoint.sh"]
+# ENTRYPOINT ["entrypoint.sh"]
 
-CMD ["demo0"]
+# CMD ["demo0"]
