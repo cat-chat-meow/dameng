@@ -48,7 +48,8 @@ else
     run_info=$(docker ps -a | grep "$run_name")
     if [[ "$run_info" != *"Up"* ]]; then
         echo "is not running"
-        ./docker.sh -r demo$1 -name $run_name    
+        # ./docker.sh -r demo$1 -name $run_name   
+        docker start -it $run_name
         docker exec -it $run_name bash
     else
         echo "is running"
