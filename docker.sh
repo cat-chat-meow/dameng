@@ -83,7 +83,7 @@ docker_build() {
 
 path_dm=/opt/dmdbms
 
-create_bridge
+# create_bridge
 
 docker_run() {
     if [ -z $1 ]; then

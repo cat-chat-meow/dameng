@@ -1,19 +1,19 @@
 # 达梦数据库实践
 
-达梦启动需要时间，要等一会再连接。
+**不喜欢就别用，既然自己能写的更好，就自己写。觉得没法用，请直接将此项目从您的设备中删除。**请仔细查看各个脚本的用途，如果看不懂，亦请直接将此项目从您的设备中删除。遇到问题可以看[这里](./qa.md)，如果您遇到的问题不在其中，欢迎提出。
+
+> TIPS:  
+> 达梦启动需要时间，要等一会再连接。
 
 ## [QA](./qa.md)
 
-## 傻瓜教程
-
-```bash
-./docker.sh -b demo1
-./docker.sh -r demo1 -name demo_cpp
-```
+一些开发问题，请看[这里](./qa.md)
 
 ## docker
 
-[官方docker下载](https://eco.dameng.com/download/)
+### 官方docker
+
+[官方 docker 下载](https://eco.dameng.com/download/)
 
 [流程](https://eco.dameng.com/document/dm/zh-cn/start/dm-install-docker.html)如下
 

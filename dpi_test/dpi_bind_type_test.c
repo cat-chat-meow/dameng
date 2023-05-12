@@ -52,6 +52,30 @@ int get_c_type(const enum_field_types type)
         break;
     }
 }
+#define DPIRETURN_CHECK(rt, hndl_type, hndl) \
+    if (!DSQL_SUCCEEDED(rt))                 \
+    {                                        \
+        dpi_err_msg_print(hndl_type, hndl);  \
+        return rt;                           \
+    }
+#define FUN_CHECK(rt)        \
+    if (!DSQL_SUCCEEDED(rt)) \
+    {                        \
+        goto END;            \
+    }
+
+void dpi_err_msg_print(sdint2 hndl_type, dhandle hndl)
+{
+    sdint4 err_code;
+    sdint2 msg_len;
+    sdbyte err_msg[SDBYTE_MAX];
+    // 获取错误信息字段
+    /*	dpi_get_diag_field(hndl_type, hndl, 1, DSQL_DIAG_MESSAGE_TEXT, err_msg, sizeof(err_msg), NULL);
+        printf("err_msg = %s\n", err_msg);*/
+    // 获取错误信息集合
+    dpi_get_diag_rec(hndl_type, hndl, 1, &err_code, err_msg, sizeof(err_msg), &msg_len);
+    printf("err_msg = %s, err_code = %d\n", err_msg, err_code);
+}
 
 DPIRETURN
 dm_insert_with_bind_param()
@@ -124,6 +148,8 @@ dm_insert_with_bind_param()
 }
 
 #define ROWS 10
+#define CHARS 80 * 1024 // 一次读取和写入的字节数800K
+#define FLEN 500        // 文件名长度(带地址路径)
 
 DPIRETURN
 dm_insert_with_bind_array()
@@ -206,6 +232,333 @@ dm_insert_with_bind_array()
     rt = dpi_free_stmt(hstmt);
     DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
     printf("dm insert with bind array success\n");
+    return DSQL_SUCCESS;
+}
+
+DPIRETURN
+dm_select_with_fetch()
+{
+    sdint4 c1 = 0; // 与字段匹配的变量，用于获取字段值
+    sdbyte c2[20];
+    sdbyte c3[50];
+    ddouble c4;
+    dpi_timestamp_t c5;
+    sdbyte c6[50];
+    sdbyte c7[FLEN];
+    slength c1_ind = 0; // 缓冲区
+    slength c2_ind = 0;
+    slength c3_ind = 0;
+    slength c4_ind = 0;
+    slength c5_ind = 0;
+    slength c6_ind = 0;
+    slength c7_ind = 0;
+    ulength row_num; // 行数
+    sdint4 dataflag = 0;
+    // 分配语句句柄
+    DPIRETURN_CHECK(dpi_alloc_stmt(hcon, &hstmt), DSQL_HANDLE_STMT, hstmt);
+    // 执行sql语句
+    DPIRETURN_CHECK(dpi_exec_direct(hstmt, "select c1,c2,c3,c4,c5,c6,c7 from dpi_demo"), DSQL_HANDLE_STMT, hstmt);
+    // 绑定输出列
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 1, DSQL_C_SLONG, &c1, sizeof(c1), &c1_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 2, DSQL_C_NCHAR, &c2, sizeof(c2), &c2_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 3, DSQL_C_NCHAR, &c3, sizeof(c3), &c3_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 4, DSQL_C_DOUBLE, &c4, sizeof(c4), &c4_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 5, DSQL_C_TIMESTAMP, &c5, sizeof(c5), &c5_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 6, DSQL_C_NCHAR, &c6, sizeof(c6), &c6_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 7, DSQL_C_NCHAR, &c7, sizeof(c7), &c7_ind), DSQL_HANDLE_STMT, hstmt);
+    printf("dm_select_with_fetch......\n");
+    printf("----------------------------------------------------------------------\n");
+    while (dpi_fetch(hstmt, &row_num) != DSQL_NO_DATA)
+    {
+        printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+        printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+        printf("c6 = %s, c7 = %s\n", c6, c7);
+        dataflag = 1;
+    }
+    printf("----------------------------------------------------------------------\n");
+    if (!dataflag)
+    {
+        printf("dm no data\n");
+    }
+    /* 释放语句句柄 */
+    DPIRETURN_CHECK(dpi_free_stmt(hstmt), DSQL_HANDLE_STMT, hstmt);
+    return DSQL_SUCCESS;
+}
+/************************************************
+    使用参数绑定后再fetch获取结果集
+************************************************/
+DPIRETURN
+dm_select_with_fetch_with_param()
+{
+    sdint4 c1 = 0; // 与字段匹配的变量，用于获取字段值
+    slength c1_param_ind = 0;
+    sdbyte c2[20];
+    sdbyte c3[50];
+    ddouble c4;
+    dpi_timestamp_t c5;
+    sdbyte c6[50];
+    sdbyte c7[FLEN];
+    slength c1_ind = 0; // 缓冲区
+    slength c2_ind = 0;
+    slength c3_ind = 0;
+    slength c4_ind = 0;
+    slength c5_ind = 0;
+    slength c6_ind = 0;
+    slength c7_ind = 0;
+    ulength row_num; // 行数
+    sdint4 dataflag = 0;
+    c1 = 10; // 读取c1=10的数据
+    // 分配语句句柄
+    DPIRETURN_CHECK(dpi_alloc_stmt(hcon, &hstmt), DSQL_HANDLE_STMT, hstmt);
+    // 准备sql
+    DPIRETURN_CHECK(dpi_prepare(hstmt, "select c1,c2,c3,c4,c5,c6,c7 from dpi_demo where c1 = ?"), DSQL_HANDLE_STMT, hstmt);
+    // 绑定参数
+    DPIRETURN_CHECK(dpi_bind_param(hstmt, 1, DSQL_PARAM_INPUT, DSQL_C_STINYINT, DSQL_INT, sizeof(c1), 0, &c1, sizeof(c1), &c1_param_ind), DSQL_HANDLE_STMT, hstmt);
+    // 执行sql
+    DPIRETURN_CHECK(dpi_exec(hstmt), DSQL_HANDLE_STMT, hstmt);
+    // 绑定输出列
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 1, DSQL_C_SLONG, &c1, sizeof(c1), &c1_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 2, DSQL_C_NCHAR, &c2, sizeof(c2), &c2_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 3, DSQL_C_NCHAR, &c3, sizeof(c3), &c3_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 4, DSQL_C_DOUBLE, &c4, sizeof(c4), &c4_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 5, DSQL_C_TIMESTAMP, &c5, sizeof(c5), &c5_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 6, DSQL_C_NCHAR, &c6, sizeof(c6), &c6_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 7, DSQL_C_NCHAR, &c7, sizeof(c7), &c7_ind), DSQL_HANDLE_STMT, hstmt);
+    // 打印输出信息
+    printf("dm_select_with_fetch_with_param......\n");
+    printf("----------------------------------------------------------------------\n");
+    while (dpi_fetch(hstmt, &row_num) != DSQL_NO_DATA)
+    {
+        printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+        printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+        printf("c6 = %s, c7 = %s\n", c6, c7);
+        dataflag = 1;
+    }
+    printf("----------------------------------------------------------------------\n");
+    if (!dataflag)
+    {
+        printf("dm no data\n");
+    }
+    /* 释放语句句柄 */
+    DPIRETURN_CHECK(dpi_free_stmt(hstmt), DSQL_HANDLE_STMT, hstmt);
+    return DSQL_SUCCESS;
+}
+/************************************************
+    fetch获取结果集,scroll结果集
+************************************************/
+DPIRETURN
+dm_select_with_fetch_scroll()
+{
+    sdint4 c1 = 0; // 与字段匹配的变量，用于获取字段值
+    sdbyte c2[20];
+    sdbyte c3[50];
+    ddouble c4;
+    dpi_timestamp_t c5;
+    sdbyte c6[50];
+    sdbyte c7[FLEN];
+    slength c1_ind = 0; // 缓冲区
+    slength c2_ind = 0;
+    slength c3_ind = 0;
+    slength c4_ind = 0;
+    slength c5_ind = 0;
+    slength c6_ind = 0;
+    slength c7_ind = 0;
+    ulength row_num; // 行数
+    ulength val = DSQL_CURSOR_DYNAMIC;
+    sdint4 dataflag = 0;
+    // 分配语句句柄
+    DPIRETURN_CHECK(dpi_alloc_stmt(hcon, &hstmt), DSQL_HANDLE_STMT, hstmt);
+    // 设置语句句柄属性
+    DPIRETURN_CHECK(dpi_set_stmt_attr(hstmt, DSQL_ATTR_CURSOR_TYPE, (dpointer)val, 0), DSQL_HANDLE_STMT, hstmt);
+    // 执行sql
+    DPIRETURN_CHECK(dpi_exec_direct(hstmt, "select c1,c2,c3,c4,c5,c6,c7 from dpi_demo"), DSQL_HANDLE_STMT, hstmt);
+    // 绑定输出列
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 1, DSQL_C_SLONG, &c1, sizeof(c1), &c1_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 2, DSQL_C_NCHAR, &c2, sizeof(c2), &c2_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 3, DSQL_C_NCHAR, &c3, sizeof(c3), &c3_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 4, DSQL_C_DOUBLE, &c4, sizeof(c4), &c4_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 5, DSQL_C_TIMESTAMP, &c5, sizeof(c5), &c5_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 6, DSQL_C_NCHAR, &c6, sizeof(c6), &c6_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 7, DSQL_C_NCHAR, &c7, sizeof(c7), &c7_ind), DSQL_HANDLE_STMT, hstmt);
+    // 显示输出信息
+    printf("dm_select_with_fetch_scroll......\n");
+    printf("----------------------------------------------------------------------\n");
+    while (dpi_fetch_scroll(hstmt, DSQL_FETCH_NEXT, 0, &row_num) != DSQL_NO_DATA)
+    {
+        printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+        printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+        printf("c6 = %s, c7 = %s\n", c6, c7);
+        dataflag = 1;
+    }
+    if (!dataflag)
+    {
+        printf("dm no data\n");
+        return DSQL_SUCCESS;
+    }
+    DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_FIRST, 0, &row_num), DSQL_HANDLE_STMT, hstmt);
+    printf("move first : 1\n");
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+    printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+    printf("c6 = %s, c7 = %s\n", c6, c7);
+    DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_LAST, 0, &row_num), DSQL_HANDLE_STMT, hstmt);
+    printf("move last : 19\n");
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+    printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+    printf("c6 = %s, c7 = %s\n", c6, c7);
+    DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_ABSOLUTE, 6, &row_num), DSQL_HANDLE_STMT, hstmt);
+    printf("move absolute 6: 14\n");
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+    printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+    printf("c6 = %s, c7 = %s\n", c6, c7);
+    DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_PRIOR, 0, &row_num), DSQL_HANDLE_STMT, hstmt);
+    printf("move prior : 13\n");
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+    printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+    printf("c6 = %s, c7 = %s\n", c6, c7);
+    DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_RELATIVE, 3, &row_num), DSQL_HANDLE_STMT, hstmt);
+    printf("move relative 3: 16\n");
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+    printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+    printf("c6 = %s, c7 = %s\n", c6, c7);
+    printf("----------------------------------------------------------------------\n");
+    // 释放语句句柄
+    DPIRETURN_CHECK(dpi_free_stmt(hstmt), DSQL_HANDLE_STMT, hstmt);
+    return DSQL_SUCCESS;
+}
+/************************************************
+    fetch获取结果集输出到数组
+************************************************/
+DPIRETURN
+dm_select_with_fetch_array()
+{
+    sdint4 c1[ROWS]; // 与字段匹配的变量，用于获取字段值
+    sdbyte c2[ROWS][20];
+    sdbyte c3[ROWS][50];
+    ddouble c4[ROWS];
+    dpi_timestamp_t c5[ROWS];
+    sdbyte c6[ROWS][50];
+    sdbyte c7[ROWS][FLEN];
+    slength c1_ind[ROWS]; // 缓冲区
+    slength c2_ind[ROWS];
+    slength c3_ind[ROWS];
+    slength c4_ind[ROWS];
+    slength c5_ind[ROWS];
+    slength c6_ind[ROWS];
+    slength c7_ind[ROWS];
+    ulength row_num; // 行数
+    ulength i;
+    ulength i_array_rows = ROWS;
+    // 分配语句句柄
+    DPIRETURN_CHECK(dpi_alloc_stmt(hcon, &hstmt), DSQL_HANDLE_STMT, hstmt);
+    // 设置语句句柄属性
+    DPIRETURN_CHECK(dpi_set_stmt_attr(hstmt, DSQL_ATTR_ROWSET_SIZE, (dpointer)i_array_rows, sizeof(i_array_rows)), DSQL_HANDLE_STMT, hstmt);
+    // 执行sql
+    DPIRETURN_CHECK(dpi_exec_direct(hstmt, "select c1,c2,c3,c4,c5,c6,c7 from dpi_demo"), DSQL_HANDLE_STMT, hstmt);
+    // 绑定输出列
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 1, DSQL_C_SLONG, &c1[0], sizeof(c1[0]), &c1_ind[0]), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 2, DSQL_C_NCHAR, &c2[0], sizeof(c2[0]), &c2_ind[0]), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 3, DSQL_C_NCHAR, &c3[0], sizeof(c3[0]), &c3_ind[0]), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 4, DSQL_C_DOUBLE, &c4[0], sizeof(c4[0]), &c4_ind[0]), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 5, DSQL_C_TIMESTAMP, &c5[0], sizeof(c5[0]), &c5_ind[0]), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 6, DSQL_C_NCHAR, &c6[0], sizeof(c6[0]), &c6_ind[0]), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 7, DSQL_C_NCHAR, &c7[0], sizeof(c7[0]), &c7_ind[0]), DSQL_HANDLE_STMT, hstmt);
+    // 打印输出信息
+    printf("dm_select_with_fetch_array......\n");
+    printf("----------------------------------------------------------------------\n");
+    if (dpi_fetch(hstmt, &row_num) != DSQL_NO_DATA)
+    {
+        row_num = row_num > ROWS ? ROWS : row_num;
+        for (i = 0; i < row_num; i++)
+        {
+            printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1[i], c2[i], c3[i], c4[i]);
+            printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5[i].year, c5[i].month, c5[i].day, c5[i].hour, c5[i].minute, c5[i].second, c5[i].fraction);
+            printf("c6 = %s, c7 = %s\n", c6[i], c7[i]);
+        }
+    }
+    else
+    {
+        printf("dm no data\n");
+    }
+    printf("----------------------------------------------------------------------\n");
+    // 释放语句句柄
+    DPIRETURN_CHECK(dpi_free_stmt(hstmt), DSQL_HANDLE_STMT, hstmt);
+    return DSQL_SUCCESS;
+}
+
+DPIRETURN
+dm_insert_select_complex_type_value()
+{
+    dhobj obj;          // 复合对象句柄
+    dhobjdesc obj_desc; // 复合对象描述句柄
+    udint4 cnt, cnt1;
+    slength len;
+    sdint2 type, type1, type2;
+    sdint2 prec, prec1, prec2;
+    sdint2 scale, scale1, scale2;
+    int c1_data, c1_val;
+    char c2_data[21], c2_val[21];
+    slength val_len[2], data_len[2];
+    /* 分配语句句柄 */
+    DPIRETURN_CHECK(dpi_alloc_stmt(hcon, &hstmt), DSQL_HANDLE_STMT, hstmt);
+    dpi_exec_direct(hstmt, "drop table t");
+    dpi_exec_direct(hstmt, "drop class cls1");
+    DPIRETURN_CHECK(dpi_exec_direct(hstmt, "create class cls1 as c1 int; c2 varchar(20); end;"), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_exec_direct(hstmt, "create table t(c1 cls1)"), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_desc_obj(hcon, "SYSDBA", "CLS1", &obj_desc), DSQL_HANDLE_DBC, hcon);
+    DPIRETURN_CHECK(dpi_alloc_obj(hcon, &obj), DSQL_HANDLE_DBC, hcon);
+    DPIRETURN_CHECK(dpi_bind_obj_desc(obj, obj_desc), DSQL_HANDLE_OBJECT, obj);
+    // 复合类型获取描述信息
+    DPIRETURN_CHECK(dpi_get_obj_desc_attr(obj_desc, 0, DSQL_ATTR_OBJ_FIELD_COUNT, &cnt1, sizeof(cnt1), NULL), DSQL_HANDLE_OBJDESC, obj_desc);
+    printf("cnt is : %d\n", cnt1);
+    DPIRETURN_CHECK(dpi_get_obj_desc_attr(obj_desc, 1, DSQL_ATTR_OBJ_TYPE, &type1, sizeof(type1), NULL), DSQL_HANDLE_OBJDESC, obj_desc);
+    printf("type1 is : %d\n", type1);
+    if (type1 != DSQL_INT)
+    {
+        printf("type error");
+    }
+    DPIRETURN_CHECK(dpi_get_obj_desc_attr(obj_desc, 2, DSQL_ATTR_OBJ_TYPE, &type2, sizeof(type2), NULL), DSQL_HANDLE_OBJDESC, obj_desc);
+    printf("type2 is : %d\n", type2);
+    if (type1 != DSQL_VARCHAR)
+    {
+        printf("type error");
+    }
+    DPIRETURN_CHECK(dpi_get_obj_desc_attr(obj_desc, 1, DSQL_ATTR_OBJ_PREC, &prec1, sizeof(prec1), NULL), DSQL_HANDLE_OBJDESC, obj_desc);
+    printf("prec1 is : %d\n", prec1);
+    DPIRETURN_CHECK(dpi_get_obj_desc_attr(obj_desc, 2, DSQL_ATTR_OBJ_PREC, &prec2, sizeof(prec2), NULL), DSQL_HANDLE_OBJDESC, obj_desc);
+    printf("prec1 is : %d\n", prec2);
+    DPIRETURN_CHECK(dpi_get_obj_desc_attr(obj_desc, 1, DSQL_ATTR_OBJ_SCALE, &scale1, sizeof(scale1), NULL), DSQL_HANDLE_OBJDESC, obj_desc);
+    printf("scale1 is : %d\n", scale1);
+    DPIRETURN_CHECK(dpi_get_obj_desc_attr(obj_desc, 2, DSQL_ATTR_OBJ_SCALE, &scale2, sizeof(scale2), NULL), DSQL_HANDLE_OBJDESC, obj_desc);
+    printf("scale2 is : %d\n", scale2);
+
+    // 复合类型插入
+    c1_data = 1;
+    strcpy(c2_data, "aaa");
+    data_len[0] = sizeof(c1_data);
+    data_len[1] = strlen(c2_data);
+    DPIRETURN_CHECK(dpi_set_obj_val(obj, 1, DSQL_C_SLONG, &c1_data, data_len[0]), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_set_obj_val(obj, 2, DSQL_C_NCHAR, &c2_data, data_len[1]), DSQL_HANDLE_STMT, hstmt);
+    // 执行sql
+    DPIRETURN_CHECK(dpi_prepare(hstmt, "insert into t(c1) values(?)"), DSQL_HANDLE_STMT, hstmt);
+    // 绑定输出列
+    len = sizeof(obj);
+    DPIRETURN_CHECK(dpi_bind_param(hstmt, 1, DSQL_PARAM_INPUT, DSQL_C_CLASS, DSQL_CLASS, 0, 0, &obj, sizeof(obj), &len), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_exec(hstmt), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_commit(hcon), DSQL_HANDLE_DBC, hcon);
+    // 复合类型查询
+    DPIRETURN_CHECK(dpi_exec_direct(hstmt, "select c1 from t"), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 1, DSQL_C_CLASS, &obj, sizeof(obj), &len), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_fetch(hstmt, NULL), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_get_obj_val(obj, 1, DSQL_C_SLONG, &c1_val, sizeof(c1_val), &val_len[0]), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_get_obj_val(obj, 2, DSQL_C_NCHAR, c2_val, sizeof(c2_val), &val_len[1]), DSQL_HANDLE_STMT, hstmt);
+    printf("c1_val=%d,c2_val=%s\n", c1_val, c2_val);
+    if (c1_val != c1_data || strcmp(c2_val, c2_data) != 0)
+    {
+        printf("dpi_get_obj_val获取结果 error");
+    }
+    printf("----------------------------------------------------------------------\n");
+    // 释放语句句柄
+    DPIRETURN_CHECK(dpi_free_stmt(hstmt), DSQL_HANDLE_STMT, hstmt);
     return DSQL_SUCCESS;
 }
 
