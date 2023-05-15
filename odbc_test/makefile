@@ -18,10 +18,11 @@ object_file1=odbc_conn.o
 object_file2=odbc_dml.o
 object_file3=odbc_bind.o
 object_file4=odbc_lob.o
+object_file5=odbc_select.o
 
-object_files=odbc_conn.o odbc_dml.o odbc_bind.o odbc_lob.o
+object_files=odbc_conn.o odbc_dml.o odbc_bind.o odbc_lob.o odbc_select.o
 
-final_objects=odbc_conn odbc_dml odbc_bind odbc_lob
+final_objects=odbc_conn odbc_dml odbc_bind odbc_lob odbc_select
 
 all : $(final_objects)
 
@@ -41,6 +42,10 @@ odbc_bind : $(object_file3)
 
 odbc_lob : $(object_file4)
 	$(CC) -o $@ $(object_file4) -g $(LINKFLAGS)
+	@echo make ok.
+
+odbc_select : $(object_file1)
+	$(CC) -o $@ $(object_file5) -g $(LINKFLAGS)
 	@echo make ok.
 
 clean :
