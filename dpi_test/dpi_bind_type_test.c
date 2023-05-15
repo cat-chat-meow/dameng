@@ -28,30 +28,42 @@ enum enum_field_types
     DB_TYPE_MAX = 255
 };
 
-int get_c_type(const enum_field_types type)
-{
-    switch (type)
-    {
-    case DB_TYPE_CHAR:
-    case DB_TYPE_VARCHAR:
-    case DB_TYPE_CLOB:
-    case DB_TYPE_BLOB:
-        // sdbyte
-        return DSQL_C_NCHAR;
-    case DB_TYPE_INT:
-        // sdint4
-        return DSQL_C_SLONG;
-    case DB_TYPE_FLOAT:
-        return DSQL_C_FLOAT;
-    case DB_TYPE_DOUBLE:
-        return DSQL_C_DOUBLE;
-    case DB_TYPE_TIMESTAMP:
-        return DSQL_C_TIMESTAMP;
-    default:
-        return 0;
-        break;
-    }
-}
+// int get_c_type(const enum_field_types type)
+// {
+//     switch (type)
+//     {
+//     case DB_TYPE_CHAR:
+//     case DB_TYPE_VARCHAR:
+//     case DB_TYPE_CLOB:
+//     case DB_TYPE_BLOB:
+//         // sdbyte
+//         return DSQL_C_NCHAR;
+//     case DB_TYPE_INT:
+//         // sdint4
+//         return DSQL_C_SLONG;
+//     case DB_TYPE_FLOAT:
+//         return DSQL_C_FLOAT;
+//     case DB_TYPE_DOUBLE:
+//         return DSQL_C_DOUBLE;
+//     case DB_TYPE_TIMESTAMP:
+//         return DSQL_C_TIMESTAMP;
+//     default:
+//         return 0;
+//         break;
+//     }
+// }
+
+/******************************************************
+Notes:
+定义相应常量
+*******************************************************/
+#define ROWS 10         // 数组绑定一次插入和读取的行数
+#define CHARS 80 * 1024 // 一次读取和写入的字节数800K
+#define FLEN 500        // 文件名长度(带地址路径)
+#define DM_SVR "LOCALHOST"
+#define DM_USER "SYSDBA"
+#define DM_PWD "SYSDBA001"
+// 函数检查及错误信息显示
 #define DPIRETURN_CHECK(rt, hndl_type, hndl) \
     if (!DSQL_SUCCEEDED(rt))                 \
     {                                        \
@@ -63,7 +75,25 @@ int get_c_type(const enum_field_types type)
     {                        \
         goto END;            \
     }
-
+/******************************************************
+Notes:
+定义常用句柄和变量
+*******************************************************/
+dhenv henv;         /* 环境句柄 */
+dhcon hcon;         /* 连接句柄 */
+dhstmt hstmt;       /* 语句句柄 */
+dhdesc hdesc;       /* 描述符句柄 */
+dhloblctr hloblctr; /* lob类型控制句柄 */
+DPIRETURN rt;       /* 函数返回值 */
+/******************************************************
+Notes:
+    错误信息获取打印
+Param:
+    hndl_type:	句柄类型
+    hndl:		句柄
+Return:
+    无
+*******************************************************/
 void dpi_err_msg_print(sdint2 hndl_type, dhandle hndl)
 {
     sdint4 err_code;
@@ -76,7 +106,70 @@ void dpi_err_msg_print(sdint2 hndl_type, dhandle hndl)
     dpi_get_diag_rec(hndl_type, hndl, 1, &err_code, err_msg, sizeof(err_msg), &msg_len);
     printf("err_msg = %s, err_code = %d\n", err_msg, err_code);
 }
+/******************************************************
+Notes:
+    连接数据库
+Param:
+    server: 服务器IP
+    uid:	数据库登录账号
+    pwd:	数据库登录密码
+Return:
+    DSQL_SUCCESS 执行成功
+    DSQL_ERROR   执行失败
+*******************************************************/
+DPIRETURN
+dm_dpi_connect(sdbyte *server, sdbyte *uid, sdbyte *pwd)
+{
+    // 申请环境句柄
+    rt = dpi_alloc_env(&henv);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_ENV, henv);
+    // 申请连接句柄
+    rt = dpi_alloc_con(henv, &hcon);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+    // 连接数据库服务器
+    rt = dpi_login(hcon, server, uid, pwd);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+    return DSQL_SUCCESS;
+}
+/************************************************
+    断开数据库连接
+************************************************/
+DPIRETURN
+dm_dpi_disconnect()
+{
+    // 断开连接
+    rt = dpi_logout(hcon);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+    // 释放连接句柄和环境句柄
+    rt = dpi_free_con(hcon);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+    rt = dpi_free_env(henv);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_ENV, henv);
+    return DSQL_SUCCESS;
+}
+/************************************************
+    初始化表
+************************************************/
+DPIRETURN
+dm_init_table()
+{
+    // 申请语句句柄
+    rt = dpi_alloc_stmt(hcon, &hstmt);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+    // 执行sql
+    dpi_exec_direct(hstmt, "drop table dpi_demo");
+    rt = dpi_exec_direct(hstmt, "create table dpi_demo(c1 int, c2 char(20), c3 varchar(50), c4 numeric(7,3), c5 timestamp(5), c6 clob, c7 blob)");
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
+    // 释放语句句柄
+    rt = dpi_free_stmt(hstmt);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
 
+    printf("dm init table success\n");
+    return DSQL_SUCCESS;
+}
+/************************************************
+    通过参数绑定的方式执行sql语句
+************************************************/
 DPIRETURN
 dm_insert_with_bind_param()
 {
@@ -87,7 +180,6 @@ dm_insert_with_bind_param()
     dpi_timestamp_t c5;
     sdbyte c6[18];
     sdbyte c7[18];
-
     slength c1_ind_ptr;
     slength c2_ind_ptr; // 缓冲区长度
     slength c3_ind_ptr;
@@ -146,11 +238,9 @@ dm_insert_with_bind_param()
     printf("dm insert with bind param success\n");
     return DSQL_SUCCESS;
 }
-
-#define ROWS 10
-#define CHARS 80 * 1024 // 一次读取和写入的字节数800K
-#define FLEN 500        // 文件名长度(带地址路径)
-
+/************************************************
+    通过参数绑定数组的方式执行sql语句
+************************************************/
 DPIRETURN
 dm_insert_with_bind_array()
 {
@@ -234,7 +324,9 @@ dm_insert_with_bind_array()
     printf("dm insert with bind array success\n");
     return DSQL_SUCCESS;
 }
-
+/************************************************
+    fetch获取结果集
+************************************************/
 DPIRETURN
 dm_select_with_fetch()
 {
@@ -562,10 +654,40 @@ dm_insert_select_complex_type_value()
     return DSQL_SUCCESS;
 }
 
-/*
-入口函数
-*/
-int main(int argc, char *argv[])
+// 入口函数
+DPIRETURN
+main()
 {
-    return 0;
+    // 连接数据库
+    rt = dm_dpi_connect(DM_SVR, DM_USER, DM_PWD);
+    FUN_CHECK(rt);
+    // 初始化表
+    rt = dm_init_table();
+    FUN_CHECK(rt);
+    // 通过参数绑定的方式插入数据
+    rt = dm_insert_with_bind_param();
+    FUN_CHECK(rt);
+    // 通过数组绑定的方式插入数据
+    rt = dm_insert_with_bind_array();
+    FUN_CHECK(rt);
+    // 通过fetch查询得到结果集
+    rt = dm_select_with_fetch();
+    FUN_CHECK(rt);
+    // 通过参数绑定查询得到结果集
+    rt = dm_select_with_fetch_with_param();
+    FUN_CHECK(rt);
+    // 通过fetch scroll获取结果集
+    rt = dm_select_with_fetch_scroll();
+    FUN_CHECK(rt);
+    // 查询列绑定数组输出
+    rt = dm_select_with_fetch_array();
+    FUN_CHECK(rt);
+    // 复合类型插入查询描述信息获取示例
+    rt = dm_insert_select_complex_type_value();
+    FUN_CHECK(rt);
+    // 断开连接
+    rt = dm_dpi_disconnect();
+    FUN_CHECK(rt);
+END:
+    return DSQL_SUCCESS;
 }
