@@ -362,7 +362,7 @@ dm_select_with_fetch()
     printf("----------------------------------------------------------------------\n");
     while (dpi_fetch(hstmt, &row_num) != DSQL_NO_DATA)
     {
-        printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+        printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
         printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
         printf("c6 = %s, c7 = %s\n", c6, c7);
         dataflag = 1;
@@ -421,7 +421,7 @@ dm_select_with_fetch_with_param()
     printf("----------------------------------------------------------------------\n");
     while (dpi_fetch(hstmt, &row_num) != DSQL_NO_DATA)
     {
-        printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+        printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
         printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
         printf("c6 = %s, c7 = %s\n", c6, c7);
         dataflag = 1;
@@ -477,7 +477,7 @@ dm_select_with_fetch_scroll()
     printf("----------------------------------------------------------------------\n");
     while (dpi_fetch_scroll(hstmt, DSQL_FETCH_NEXT, 0, &row_num) != DSQL_NO_DATA)
     {
-        printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+        printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
         printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
         printf("c6 = %s, c7 = %s\n", c6, c7);
         dataflag = 1;
@@ -489,27 +489,27 @@ dm_select_with_fetch_scroll()
     }
     DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_FIRST, 0, &row_num), DSQL_HANDLE_STMT, hstmt);
     printf("move first : 1\n");
-    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
     printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
     printf("c6 = %s, c7 = %s\n", c6, c7);
     DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_LAST, 0, &row_num), DSQL_HANDLE_STMT, hstmt);
     printf("move last : 19\n");
-    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
     printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
     printf("c6 = %s, c7 = %s\n", c6, c7);
     DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_ABSOLUTE, 6, &row_num), DSQL_HANDLE_STMT, hstmt);
     printf("move absolute 6: 14\n");
-    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
     printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
     printf("c6 = %s, c7 = %s\n", c6, c7);
     DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_PRIOR, 0, &row_num), DSQL_HANDLE_STMT, hstmt);
     printf("move prior : 13\n");
-    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
     printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
     printf("c6 = %s, c7 = %s\n", c6, c7);
     DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_RELATIVE, 3, &row_num), DSQL_HANDLE_STMT, hstmt);
     printf("move relative 3: 16\n");
-    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1, c2, c3, c4);
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
     printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
     printf("c6 = %s, c7 = %s\n", c6, c7);
     printf("----------------------------------------------------------------------\n");
@@ -562,7 +562,7 @@ dm_select_with_fetch_array()
         row_num = row_num > ROWS ? ROWS : row_num;
         for (i = 0; i < row_num; i++)
         {
-            printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, ", c1[i], c2[i], c3[i], c4[i]);
+            printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1[i], c2[i], c3[i], c4[i]);
             printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5[i].year, c5[i].month, c5[i].day, c5[i].hour, c5[i].minute, c5[i].second, c5[i].fraction);
             printf("c6 = %s, c7 = %s\n", c6[i], c7[i]);
         }
