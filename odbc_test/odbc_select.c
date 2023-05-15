@@ -52,21 +52,21 @@ int main(void)
     SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
 
     // 查询数据
-    SQLExecDirect(hstmt, (SQLCHAR *)"select NAME from TEST001", SQL_NTS);
-    SQLBindCol(hstmt, 1, SQL_C_SLONG, &out_c1, sizeof(out_c1) / sizeof(SQLLEN), &out_c1_ind);
-    SQLBindCol(hstmt, 2, SQL_C_CHAR, &out_c2, sizeof(out_c2) / sizeof(SQLLEN), &out_c2_ind);
+    SQLExecDirect(hstmt, (SQLCHAR *)"select * from TEST001", SQL_NTS);
+    SQLBindCol(hstmt, 1, SQL_C_SLONG, out_c1, sizeof(out_c1) / sizeof(SQLLEN), &out_c1_ind);
+    SQLBindCol(hstmt, 2, SQL_C_CHAR, out_c2, sizeof(out_c2) / sizeof(SQLLEN), &out_c2_ind);
 
     printf("odbc: select from table...\n");
-    while (SQLFetch(hstmt) != SQL_NO_DATA)
+    while (SQLFetchScroll(hstmt, SQL_FETCH_NEXT, 0) != SQL_NO_DATA_FOUND)
     {
-        printf("c1 = %d, c2 = %s ,\n", out_c1, &out_c2);
+        printf("c1 = %ld, c2 = %s ,\n", out_c1, out_c2);
     }
     printf("odbc: select success\n");
 
     printf("odbc: select again from table...\n");
-    while (SQLFetch(hstmt) != SQL_NO_DATA)
+    while (SQLFetchScroll(hstmt, SQL_FETCH_NEXT, 0) != SQL_NO_DATA_FOUND)
     {
-        printf("c1 = %d, c2 = %s ,\n", out_c1, &out_c2);
+        printf("c1 = %d, c2 = %s ,\n", out_c1, out_c2);
     }
     printf("odbc: select success\n");
 

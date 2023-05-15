@@ -44,7 +44,7 @@ odbc_lob : $(object_file4)
 	$(CC) -o $@ $(object_file4) -g $(LINKFLAGS)
 	@echo make ok.
 
-odbc_select : $(object_file1)
+odbc_select : $(object_file5)
 	$(CC) -o $@ $(object_file5) -g $(LINKFLAGS)
 	@echo make ok.
 
