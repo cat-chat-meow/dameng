@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
         "CREATE TABLE IF NOT EXISTS TEST003 (NAME VARCHAR(50), NUMBER INT)",
     };
     sdbyte sql_init[TEST_SQL][SQL_2D] = {
+        // "INSERT INTO TEST001 (NAME, CITY) VALUES ('ss', 'hh'), ('bb', 'aa'), ('ddd', 'ee')",
         "INSERT INTO TEST001 (NAME, CITY) VALUES ('罗夫', '罗浮'), ('卡夫', '杏核'), ('赢', '星河')",
         "INSERT INTO TEST002 (NAME, NUMBER) VALUES ('罗夫', 1), ('卡夫', 114), ('赢', 523)",
         "INSERT INTO TEST003 (NAME, NUMBER) VALUES ('罗夫', 1), ('卡夫', 114), ('赢', 523)",
@@ -114,20 +115,13 @@ int main(int argc, char *argv[])
         slength in_c2_ind_ptr;
 
         in_c1 = 233;
+        // sdbyte str[] = "fffw";
         sdbyte str[] = "猪鼻";
         memcpy(in_c2, str, sizeof(str));
         printf("str:%s, len:%ld\n", str, sizeof(str));
 
         in_c1_ind_ptr = sizeof(in_c1);
         in_c2_ind_ptr = sizeof(str);
-
-        sdint4 out_c1 = 0;
-        sdbyte out_c2[50];
-        sdbyte out_c3[50];
-        slength out_c1_ind = 0;
-        slength out_c2_ind = 0;
-        slength out_c3_ind = 0;
-        ulength row_num;
 
         printf("insert with bind..\nsql: %s\npara: [%d] [%s]\n", (char *)sql_bind[i], in_c1, (char *)in_c2);
 
@@ -157,9 +151,18 @@ int main(int argc, char *argv[])
         rt = dpi_exec(hstmt);
         DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
         printf("dpi: insert into table with bind success!\n");
+        DPIRETURN_CHECK(dpi_free_stmt(hstmt), DSQL_HANDLE_STMT, hstmt);
 
+        sdint4 out_c1 = 0;
+        sdbyte out_c2[50];
+        sdbyte out_c3[50];
+        slength out_c1_ind = 0;
+        slength out_c2_ind = 0;
+        slength out_c3_ind = 0;
+        ulength row_num;
         // 查询
         printf("\nexec select sql: %s\n", sql_select[i]);
+        DPIRETURN_CHECK(dpi_alloc_stmt(hcon, &hstmt), DSQL_HANDLE_STMT, hstmt);
         rt = dpi_exec_direct(hstmt, (sdbyte *)sql_select[i]);
         DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
         switch (i)
@@ -187,7 +190,7 @@ int main(int argc, char *argv[])
         }
 
         printf("\ndpi: select from table......\n");
-        while (dpi_fetch_scroll(hstmt, DSQL_FETCH_NEXT, 0, &row_num) != DSQL_NO_DATA)
+        while (dpi_fetch(hstmt, &row_num) != DSQL_NO_DATA)
         {
             printf("c1 = %d, c2 = %s, c3 = %s,\n", out_c1, out_c2, out_c3);
         }
