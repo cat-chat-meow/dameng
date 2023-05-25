@@ -68,9 +68,9 @@ int main(int argc, char *argv[])
         "DROP TABLE IF EXISTS TEST003",
     };
     sdbyte sql_create[TEST_SQL][SQL_2D] = {
-        "CREATE TABLE TEST001 (ID INT IDENTITY(1, 1), NAME VARCHAR(50), CITY VARCHAR(50))",
-        "CREATE TABLE TEST002 (ID INT IDENTITY(1, 1), NAME VARCHAR(50), NUMBER INT)",
-        "CREATE TABLE TEST003 (NAME VARCHAR(50), NUMBER INT)",
+        "CREATE TABLE IF NOT EXISTS TEST001 (ID INT IDENTITY(1, 1), NAME VARCHAR(50), CITY VARCHAR(50))",
+        "CREATE TABLE IF NOT EXISTS TEST002 (ID INT IDENTITY(1, 1), NAME VARCHAR(50), NUMBER INT)",
+        "CREATE TABLE IF NOT EXISTS TEST003 (NAME VARCHAR(50), NUMBER INT)",
     };
     sdbyte sql_init[TEST_SQL][SQL_2D] = {
         "INSERT INTO TEST001 (NAME, CITY) VALUES ('罗夫', '罗浮'), ('卡夫', '杏核'), ('赢', '星河')",
@@ -153,39 +153,39 @@ int main(int argc, char *argv[])
         }
 
         rt = dpi_exec(hstmt);
-        DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+        DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
         printf("dpi: insert into table with bind success!\n");
 
         // 查询
-        printf("exec sql: %s\n", sql_select[i]);
+        printf("\nexec select sql: %s\n", sql_select[i]);
         rt = dpi_exec_direct(hstmt, (sdbyte *)sql_select[i]);
-        DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+        DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
         switch (i)
         {
         case 1:
             rt = dpi_bind_col(hstmt, 1, DSQL_C_NCHAR, &out_c2, sizeof(out_c2), &out_c2_ind);
-            DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+            DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
             rt = dpi_bind_col(hstmt, 2, DSQL_C_NCHAR, &out_c3, sizeof(out_c3), &out_c3_ind);
-            DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+            DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
             break;
         case 2:
             rt = dpi_bind_col(hstmt, 1, DSQL_C_NCHAR, &out_c2, sizeof(out_c2), &out_c2_ind);
-            DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+            DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
             rt = dpi_bind_col(hstmt, 2, DSQL_C_SLONG, &out_c1, sizeof(out_c1), &out_c1_ind);
-            DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+            DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
             break;
         case 3:
             rt = dpi_bind_col(hstmt, 1, DSQL_C_NCHAR, &out_c2, sizeof(out_c2), &out_c2_ind);
-            DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+            DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
             rt = dpi_bind_col(hstmt, 2, DSQL_C_SLONG, &out_c1, sizeof(out_c1), &out_c1_ind);
-            DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+            DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
             break;
         default:
             break;
         }
 
         printf("\ndpi: select from table......\n");
-        while (dpi_fetch(hstmt, &row_num) != DSQL_NO_DATA)
+        while (dpi_fetch_scroll(hstmt, DSQL_FETCH_NEXT, 0, &row_num) != DSQL_NO_DATA)
         {
             printf("c1 = %d, c2 = %s, c3 = %s,\n", out_c1, out_c2, out_c3);
         }
