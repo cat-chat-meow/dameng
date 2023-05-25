@@ -92,9 +92,9 @@ int main(int argc, char *argv[])
     }
 
     sdbyte sql_bind[TEST_SQL][SQL_2D] = {
-        "INSERT INTO TEST001 (NAME, CITY) values('haha', '?')",
+        "INSERT INTO TEST001 (NAME, CITY) values('haha', ?)",
         "INSERT INTO TEST002 (NAME, NUMBER) VALUES ('罗夫', ?)",
-        "INSERT INTO TEST003 (NAME, NUMBER) VALUES ('?', ?)",
+        "INSERT INTO TEST003 (NAME, NUMBER) VALUES (?, ?)",
     };
 
     // 查询数据
@@ -114,14 +114,16 @@ int main(int argc, char *argv[])
         slength in_c2_ind_ptr;
 
         in_c1 = 233;
-        memcpy(in_c2, "物理", 8);
+        sdbyte str[] = "猪鼻";
+        memcpy(in_c2, str, sizeof(str));
+        printf("str:%s, len:%ld\n", str, sizeof(str));
 
         in_c1_ind_ptr = sizeof(in_c1);
-        in_c2_ind_ptr = 8;
+        in_c2_ind_ptr = sizeof(str);
 
         sdint4 out_c1 = 0;
-        sdbyte out_c2[50] = {0};
-        sdbyte out_c3[50] = {0};
+        sdbyte out_c2[50];
+        sdbyte out_c3[50];
         slength out_c1_ind = 0;
         slength out_c2_ind = 0;
         slength out_c3_ind = 0;
