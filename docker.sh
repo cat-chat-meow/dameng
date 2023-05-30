@@ -97,10 +97,10 @@ docker_run() {
     dmdb)
         rm_docker dm8_01
         docker run -d \
-            -p 5236:5236 \
+            -p 5237:5236 \
             --name dm8_01 \
             --network ${CUSTOM_BRIDGE_NAME} \
-            --ip 172.20.0.100 \
+            --ip 172.20.0.101 \
             --privileged=true \
             -e PAGE_SIZE=16 \
             -e LD_LIBRARY_PATH=$path_dm/bin \

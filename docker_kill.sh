@@ -2,7 +2,7 @@
 
 rm_docker() {
 
-    echo "!!! do not kill now !!!" && exit 0
+    # echo "!!! do not kill now !!!" && exit 0
 
     # kill rm exist
     echo -e "# kill rm exist\n"
