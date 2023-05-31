@@ -654,6 +654,112 @@ dm_insert_select_complex_type_value()
     return DSQL_SUCCESS;
 }
 
+/************************************************
+    自测使用 base
+    fetch获取结果集,scroll结果集
+************************************************/
+DPIRETURN
+dm_select_with_fetch_scroll_self()
+{
+    sdbyte c1[23]; // 与字段匹配的变量，用于获取字段值
+    sdbyte c2[20];
+    sdbyte c3[50];
+    ddouble c4;
+    dpi_timestamp_t c5;
+    sdbyte c6[50];
+    sdbyte c7[FLEN];
+    slength c1_ind = 0; // 缓冲区
+    slength c2_ind = 0;
+    slength c3_ind = 0;
+    slength c4_ind = 0;
+    slength c5_ind = 0;
+    slength c6_ind = 0;
+    slength c7_ind = 0;
+    ulength row_num; // 行数
+    ulength val = DSQL_CURSOR_DYNAMIC;
+    sdint4 dataflag = 0;
+    // 分配语句句柄
+    DPIRETURN_CHECK(dpi_alloc_stmt(hcon, &hstmt), DSQL_HANDLE_STMT, hstmt);
+    // 设置语句句柄属性
+    DPIRETURN_CHECK(dpi_set_stmt_attr(hstmt, DSQL_ATTR_CURSOR_TYPE, (dpointer)val, 0), DSQL_HANDLE_STMT, hstmt);
+    // 执行sql
+    DPIRETURN_CHECK(dpi_exec_direct(hstmt, "select c1,c2,c3,c4,c5,c6,c7 from dpi_demo"), DSQL_HANDLE_STMT, hstmt);
+
+    sdint2 rows1;
+    DPIRETURN_CHECK(dpi_row_count(hstmt, &rows1), DSQL_HANDLE_STMT, hstmt);
+    printf("---- before bind, rows = %d\n", rows1);
+
+    // 绑定输出列
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 1, DSQL_C_NCHAR, &c1, sizeof(c1), &c1_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 2, DSQL_C_NCHAR, &c2, sizeof(c2), &c2_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 3, DSQL_C_NCHAR, &c3, sizeof(c3), &c3_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 4, DSQL_C_DOUBLE, &c4, sizeof(c4), &c4_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 5, DSQL_C_TIMESTAMP, &c5, sizeof(c5), &c5_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 6, DSQL_C_NCHAR, &c6, sizeof(c6), &c6_ind), DSQL_HANDLE_STMT, hstmt);
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 7, DSQL_C_NCHAR, &c7, sizeof(c7), &c7_ind), DSQL_HANDLE_STMT, hstmt);
+
+    // 显示输出信息
+    printf("dm_select_with_fetch_scroll......\n");
+    printf("----------------------------------------------------------------------\n");
+
+    sdint2 col_cnt;
+    DPIRETURN_CHECK(dpi_number_columns(hstmt, &col_cnt), DSQL_HANDLE_STMT, hstmt);
+    printf("---- col_cnt = %d\n", col_cnt);
+
+    sdint2 rows;
+    DPIRETURN_CHECK(dpi_row_count(hstmt, &rows), DSQL_HANDLE_STMT, hstmt);
+    printf("---- rows = %d\n", rows);
+
+    sdint2 fetch_rows = 0;
+    while (dpi_fetch_scroll(hstmt, DSQL_FETCH_NEXT, 0, &row_num) != DSQL_NO_DATA)
+    {
+        printf("c1 = %s, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
+        printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+        printf("c6 = %s, c7 = %s\n", c6, c7);
+
+        printf("---- index 1[%d] 2[%d] 3[%d] 4[%d] 5[%d] 6[%d] 7[%d]\n",
+               c1_ind, c2_ind, c3_ind, c4_ind, c5_ind, c6_ind, c7_ind);
+        dataflag = 1;
+        ++fetch_rows;
+    }
+
+    printf("---- fetch_rows = %d\n", fetch_rows);
+    if (!dataflag)
+    {
+        printf("dm no data\n");
+        return DSQL_SUCCESS;
+    }
+    DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_FIRST, 0, &row_num), DSQL_HANDLE_STMT, hstmt);
+    printf("move first : 1\n");
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
+    printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+    printf("c6 = %s, c7 = %s\n", c6, c7);
+    DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_LAST, 0, &row_num), DSQL_HANDLE_STMT, hstmt);
+    printf("move last : 19\n");
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
+    printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+    printf("c6 = %s, c7 = %s\n", c6, c7);
+    DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_ABSOLUTE, 6, &row_num), DSQL_HANDLE_STMT, hstmt);
+    printf("move absolute 6: 14\n");
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
+    printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+    printf("c6 = %s, c7 = %s\n", c6, c7);
+    DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_PRIOR, 0, &row_num), DSQL_HANDLE_STMT, hstmt);
+    printf("move prior : 13\n");
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
+    printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+    printf("c6 = %s, c7 = %s\n", c6, c7);
+    DPIRETURN_CHECK(dpi_fetch_scroll(hstmt, DSQL_FETCH_RELATIVE, 3, &row_num), DSQL_HANDLE_STMT, hstmt);
+    printf("move relative 3: 16\n");
+    printf("c1 = %d, c2 = %s, c3 = %s, c4 = %f, \n", c1, c2, c3, c4);
+    printf("c5 = %d-%d-%d %d:%d:%d.%d\n", c5.year, c5.month, c5.day, c5.hour, c5.minute, c5.second, c5.fraction);
+    printf("c6 = %s, c7 = %s\n", c6, c7);
+    printf("----------------------------------------------------------------------\n");
+    // 释放语句句柄
+    DPIRETURN_CHECK(dpi_free_stmt(hstmt), DSQL_HANDLE_STMT, hstmt);
+    return DSQL_SUCCESS;
+}
+
 // 入口函数
 DPIRETURN
 main()
@@ -670,6 +776,12 @@ main()
     // 通过数组绑定的方式插入数据
     rt = dm_insert_with_bind_array();
     FUN_CHECK(rt);
+
+    // self test
+    rt = dm_select_with_fetch_scroll_self();
+    FUN_CHECK(rt);
+    return DSQL_SUCCESS;
+
     // 通过fetch查询得到结果集
     rt = dm_select_with_fetch();
     FUN_CHECK(rt);
