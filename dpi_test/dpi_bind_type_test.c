@@ -675,8 +675,8 @@ dm_select_with_fetch_scroll_self()
     slength c5_ind = 0;
     slength c6_ind = 0;
     slength c7_ind = 0;
-    ulength row_num; // 行数
-    ulength val = DSQL_CURSOR_DYNAMIC;
+    ulength row_num;                   // 行数
+    ulength val = DSQL_CURSOR_DYNAMIC; // 这个才能获取到行数
     sdint4 dataflag = 0;
     // 分配语句句柄
     DPIRETURN_CHECK(dpi_alloc_stmt(hcon, &hstmt), DSQL_HANDLE_STMT, hstmt);
