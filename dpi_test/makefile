@@ -7,6 +7,7 @@ libpath=$(DM_HOME)/bin
 vpath=./
 
 CFLAGS=-I$(includepath) -I$(PROJECT_DIR)../include/ -DDM64 -Wall
+CFLAGS+=-std=c11
 LINKFLAGS=-L$(libpath) -ldmdpi -Wall
 
 CFILES=${wildcard *.c}

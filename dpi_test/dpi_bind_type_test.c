@@ -62,7 +62,7 @@ Notes:
 #define FLEN 500        // 文件名长度(带地址路径)
 #define DM_SVR "LOCALHOST"
 #define DM_USER "SYSDBA"
-#define DM_PWD "SYSDBA001"
+#define DM_PWD "SYSDBA"
 // 函数检查及错误信息显示
 #define DPIRETURN_CHECK(rt, hndl_type, hndl) \
     if (!DSQL_SUCCEEDED(rt))                 \
@@ -760,6 +760,62 @@ dm_select_with_fetch_scroll_self()
     return DSQL_SUCCESS;
 }
 
+// 达梦数据库中提供了LAST_INSERT_ID函数，可以获取插入的自增列的值，因此可以自行封装个函数，将查询到的LAST_INSERT_ID结果返回，代码如下
+DPIRETURN dm_insert_id()
+{
+    ulength row_num;
+    sdint2 c1 = 0;
+    slength c1_ind = 0;
+    rt = dpi_alloc_stmt(hcon, &hstmt);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+
+    // rt = dpi_exec_direct(hstmt, "select LAST_INSERT_ID from dual");
+    rt = dpi_exec_direct(hstmt, "select @@IDENTITY");
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
+
+    DPIRETURN_CHECK(dpi_bind_col(hstmt, 1, DSQL_C_UBIGINT, &c1, sizeof(c1), &c1_ind), DSQL_HANDLE_STMT, hstmt);
+
+    rt = dpi_fetch(hstmt, &row_num);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
+    // 释放语句句柄
+    rt = dpi_free_stmt(hstmt);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
+    printf("dm insert id success\n");
+    printf("c1: %d", c1);
+    return c1;
+}
+
+void test_ind()
+{
+
+    // 申请语句句柄
+    rt = dpi_alloc_stmt(hcon, &hstmt);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+    // 执行sql
+    // rt = dpi_exec_direct(hstmt, "CREATE TABLE IDENT_TABLE_T2 (C1 INT IDENTITY(0, 1),C2 INT)");
+    // rt = dpi_exec_direct(hstmt, "CREATE TABLE IDEN3 (ID INT PRIMARY KEY AUTO_INCREMENT, NAME CHAR(10)) ");
+    // DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
+    // 释放语句句柄
+    rt = dpi_free_stmt(hstmt);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
+
+    // 申请语句句柄
+    rt = dpi_alloc_stmt(hcon, &hstmt);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_DBC, hcon);
+    // 执行sql
+    // rt = dpi_exec_direct(hstmt, "insert into IDENT_TABLE_T2 values(3)");
+    rt = dpi_exec_direct(hstmt, "insert into IDEN3(name) values('test')");
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
+    // 释放语句句柄
+    rt = dpi_free_stmt(hstmt);
+    DPIRETURN_CHECK(rt, DSQL_HANDLE_STMT, hstmt);
+
+    int in_id = dm_insert_id();
+    printf("inid: %d", in_id);
+
+    printf("dm init table success\n");
+}
+
 // 入口函数
 DPIRETURN
 main()
@@ -776,6 +832,8 @@ main()
     // 通过数组绑定的方式插入数据
     rt = dm_insert_with_bind_array();
     FUN_CHECK(rt);
+
+    test_ind();
 
     // self test
     rt = dm_select_with_fetch_scroll_self();
