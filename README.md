@@ -36,10 +36,12 @@ docker restart dm8_01
 ```bash
 # login
 cd /opt/dmdbms/bin && ./disql SYSDBA/SYSDBA001@127.0.0.1:5236
+cd $DM_HOME/bin && ./disql SYSDBA/SYSDBA001@127.0.0.1:5236
 
 cd /opt/dmdbms/bin
 ./disql SYSDBA/SYSDBA001@127.0.0.1:5236
 ./disql test111/'"123456@@@"'@127.0.0.1:5236
+
 # or
 isql -v DM
 ```
